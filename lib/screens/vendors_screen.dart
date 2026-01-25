@@ -1,6 +1,7 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:intl/intl.dart';
 import '../main.dart';
 import '../database/database.dart';
 
@@ -17,6 +18,183 @@ class VendorsScreen extends ConsumerStatefulWidget {
 }
 
 class _VendorsScreenState extends ConsumerState<VendorsScreen> {
+  void _showVendorDetails(Vendor vendor) async {
+    final db = ref.read(databaseProvider);
+    
+    // Get all expenses for this vendor
+    final allExpenses = await db.getAllExpenses();
+    final vendorExpenses = allExpenses.where((e) => e.vendorId == vendor.id).toList();
+    final totalExpenses = vendorExpenses.fold<double>(0, (sum, e) => sum + e.amount);
+    
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
+    final dateFormat = DateFormat('dd MMM yyyy');
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: Text(vendor.name),
+        content: SizedBox(
+          width: 600,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Vendor Info
+              if (vendor.contactPerson != null && vendor.contactPerson!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    const Icon(FluentIcons.contact, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(vendor.contactPerson!)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (vendor.phone != null && vendor.phone!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    const Icon(FluentIcons.phone, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(vendor.phone!)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (vendor.email != null && vendor.email!.isNotEmpty) ...[
+                Row(
+                  children: [
+                    const Icon(FluentIcons.mail, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(vendor.email!)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              if (vendor.address != null && vendor.address!.isNotEmpty) ...[
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(FluentIcons.location, size: 16),
+                    const SizedBox(width: 8),
+                    Expanded(child: Text(vendor.address!)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+              ],
+              Row(
+                children: [
+                  const Icon(FluentIcons.calendar, size: 16),
+                  const SizedBox(width: 8),
+                  Text('Added: ${dateFormat.format(vendor.createdAt)}'),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const Divider(),
+              const SizedBox(height: 16),
+
+              // Transaction Summary
+              Text(
+                'Transaction Summary',
+                style: FluentTheme.of(context).typography.subtitle,
+              ),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.blue.light.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.blue.light),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Total Paid',
+                          style: FluentTheme.of(context).typography.caption,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          currencyFormat.format(totalExpenses),
+                          style: FluentTheme.of(context).typography.title?.copyWith(
+                            color: Colors.blue,
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      children: [
+                        Text(
+                          'Transactions',
+                          style: FluentTheme.of(context).typography.caption,
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '${vendorExpenses.length}',
+                          style: FluentTheme.of(context).typography.title,
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
+
+              if (vendorExpenses.isNotEmpty) ...[
+                const SizedBox(height: 16),
+                Text(
+                  'Recent Transactions',
+                  style: FluentTheme.of(context).typography.bodyStrong,
+                ),
+                const SizedBox(height: 8),
+                SizedBox(
+                  height: 200,
+                  child: ListView.builder(
+                    shrinkWrap: true,
+                    itemCount: vendorExpenses.length > 5 ? 5 : vendorExpenses.length,
+                    itemBuilder: (context, index) {
+                      final expense = vendorExpenses[index];
+                      return ListTile(
+                        title: Text(expense.description),
+                        subtitle: Text(dateFormat.format(expense.date)),
+                        trailing: Text(
+                          currencyFormat.format(expense.amount),
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                      );
+                    },
+                  ),
+                ),
+                if (vendorExpenses.length > 5)
+                  Text(
+                    '... and ${vendorExpenses.length - 5} more',
+                    style: FluentTheme.of(context).typography.caption,
+                  ),
+              ],
+            ],
+          ),
+        ),
+        actions: [
+          Button(
+            child: const Text('Edit'),
+            onPressed: () {
+              Navigator.pop(context);
+              _showAddEditDialog(vendor: vendor);
+            },
+          ),
+          FilledButton(
+            child: const Text('Close'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showDeleteConfirmation(Vendor vendor) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -80,7 +258,7 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                 ),
                 const SizedBox(height: 16),
                 InfoLabel(
-                  label: 'Contact Person',
+                  label: 'Contact Person Name',
                   child: TextBox(
                     controller: contactPersonController,
                     placeholder: 'Enter contact person name',
@@ -234,8 +412,8 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                     child:  Icon(FluentIcons.people, color: Colors.blue),
                   ),
                   title: Text(vendor.name),
-                  subtitle: vendor.phone != null || vendor.email != null
-                    ? Text('${vendor.phone ?? ""} ${vendor.email ?? ""}')
+                  subtitle: vendor.phone != null && vendor.phone!.isNotEmpty
+                    ? Text(vendor.phone!)
                     : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
@@ -250,6 +428,7 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                       ),
                     ],
                   ),
+                  onPressed: () => _showVendorDetails(vendor),
                 ),
               );
             },

@@ -1,6 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:window_manager/window_manager.dart';
 import 'database/database.dart';
 import 'screens/home_screen.dart';
 
@@ -10,24 +9,6 @@ final databaseProvider = Provider<AppDatabase>((ref) {
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
-  // Configure window
-  await windowManager.ensureInitialized();
-  
-  WindowOptions windowOptions = const WindowOptions(
-    size: Size(1200, 800),
-    minimumSize: Size(800, 600),
-    center: true,
-    backgroundColor: Colors.transparent,
-    skipTaskbar: false,
-    titleBarStyle: TitleBarStyle.normal,
-    title: 'Construction Expense Tracker',
-  );
-  
-  windowManager.waitUntilReadyToShow(windowOptions, () async {
-    await windowManager.show();
-    await windowManager.focus();
-  });
 
   // Initialize database
   final db = AppDatabase();

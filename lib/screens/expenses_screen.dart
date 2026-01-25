@@ -18,6 +18,126 @@ class ExpensesScreen extends ConsumerStatefulWidget {
 }
 
 class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
+  void _showExpenseDetails(Expense expense) async {
+    final db = ref.read(databaseProvider);
+    final sites = await db.getAllSites();
+    final vendors = await db.getAllVendors();
+    final categories = await db.getAllCategories();
+    
+    final sitesMap = {for (var s in sites) s.id: s.name};
+    final vendorsMap = {for (var v in vendors) v.id: v.name};
+    final categoriesMap = {for (var c in categories) c.id: c.name};
+    
+    final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
+    final dateFormat = DateFormat('dd MMM yyyy');
+
+    if (!mounted) return;
+
+    showDialog(
+      context: context,
+      builder: (context) => ContentDialog(
+        title: const Text('Expense Details'),
+        content: SizedBox(
+          width: 500,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Amount
+              Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  color: Colors.orange.light.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: Colors.orange.light),
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text(
+                      'Amount',
+                      style: FluentTheme.of(context).typography.subtitle,
+                    ),
+                    Text(
+                      currencyFormat.format(expense.amount),
+                      style: FluentTheme.of(context).typography.title?.copyWith(
+                        color: Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              
+              // Details
+              _detailRow(FluentIcons.real_estate, 'Site', sitesMap[expense.siteId] ?? 'Unknown'),
+              _detailRow(FluentIcons.edit, 'Description', expense.description),
+              _detailRow(FluentIcons.calendar, 'Date', dateFormat.format(expense.date)),
+              
+              if (expense.vendorId != null)
+                _detailRow(FluentIcons.people, 'Vendor', vendorsMap[expense.vendorId] ?? 'Unknown'),
+              
+              if (expense.categoryId != null)
+                _detailRow(FluentIcons.tag, 'Category', categoriesMap[expense.categoryId] ?? 'Unknown'),
+              
+              if (expense.paymentMode != null && expense.paymentMode!.isNotEmpty)
+                _detailRow(FluentIcons.payment_card, 'Payment Mode', expense.paymentMode!),
+              
+              if (expense.billNumber != null && expense.billNumber!.isNotEmpty)
+                _detailRow(FluentIcons.receipt_processing, 'Bill Number', expense.billNumber!),
+              
+              if (expense.remarks != null && expense.remarks!.isNotEmpty)
+                _detailRow(FluentIcons.comment, 'Remarks', expense.remarks!),
+            ],
+          ),
+        ),
+        actions: [
+          Button(
+            child: const Text('Edit'),
+            onPressed: () {
+              Navigator.pop(context);
+              _showAddEditDialog(expense: expense);
+            },
+          ),
+          FilledButton(
+            child: const Text('Close'),
+            onPressed: () => Navigator.pop(context),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _detailRow(IconData icon, String label, String value) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12.0),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, size: 16),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  label,
+                  style: const TextStyle(
+                    fontSize: 12,
+                    color: Color.fromARGB(255, 125, 123, 121),
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(value),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _showDeleteConfirmation(Expense expense) async {
     final confirmed = await showDialog<bool>(
       context: context,
@@ -376,6 +496,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       ),
                     ],
                   ),
+                  onPressed: () => _showExpenseDetails(expense),
                 ),
               );
             },

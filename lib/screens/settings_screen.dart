@@ -13,6 +13,68 @@ import '../database/database.dart';
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
+  Future<void> _downloadVendorTemplate(BuildContext context) async {
+    try {
+      final result = await FilePicker.platform.saveFile(
+        dialogTitle: 'Save Vendor Template',
+        fileName: 'vendor_template.csv',
+        type: FileType.custom,
+        allowedExtensions: ['csv'],
+      );
+
+      if (result == null) return;
+
+      const templateContent = 'Name,Contact Person,Phone,Email,Address\n'
+          'ABC Suppliers,John Doe,9876543210,john@abc.com,123 Main Street\n'
+          'XYZ Hardware,Jane Smith,9876543211,jane@xyz.com,456 Oak Avenue';
+
+      final file = File(result);
+      await file.writeAsString(templateContent);
+
+      if (context.mounted) {
+        await displayInfoBar(context, builder: (context, close) {
+          return const InfoBar(
+            title: Text('Template downloaded successfully'),
+            severity: InfoBarSeverity.success,
+          );
+        });
+      }
+    } catch (e) {
+      if (context.mounted) {
+        await displayInfoBar(context, builder: (context, close) {
+          return InfoBar(
+            title: const Text('Download failed'),
+            content: Text(e.toString()),
+            severity: InfoBarSeverity.error,
+          );
+        });
+      }
+    }
+  }
+
+  Future<void> _openDatabaseLocation(BuildContext context) async {
+    try {
+      final dbFolder = await getApplicationDocumentsDirectory();
+      final dbPath = p.join(dbFolder.path, 'ConstructionExpenses');
+      
+      if (Platform.isMacOS) {
+        await Process.run('open', [dbPath]);
+      } else if (Platform.isWindows) {
+        await Process.run('explorer', [dbPath]);
+      }
+    } catch (e) {
+      if (context.mounted) {
+        await displayInfoBar(context, builder: (context, close) {
+          return InfoBar(
+            title: const Text('Failed to open location'),
+            content: Text(e.toString()),
+            severity: InfoBarSeverity.error,
+          );
+        });
+      }
+    }
+  }
+
   Future<void> _backupDatabase(BuildContext context, WidgetRef ref) async {
     try {
       // Get the database file
@@ -388,15 +450,25 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Card(
-            child: Column(
+                          child: Column(
               children: [
                 ListTile(
                   leading: const Icon(FluentIcons.import),
                   title: const Text('Import Vendors'),
                   subtitle: const Text('Import vendors from CSV (Name, Contact, Phone, Email, Address)'),
-                  trailing: Button(
-                    child: const Text('Import CSV'),
-                    onPressed: () => _importVendorsCSV(context, ref),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Button(
+                        child: const Text('Download Template'),
+                        onPressed: () => _downloadVendorTemplate(context),
+                      ),
+                      const SizedBox(width: 8),
+                      Button(
+                        child: const Text('Import CSV'),
+                        onPressed: () => _importVendorsCSV(context, ref),
+                      ),
+                    ],
                   ),
                 ),
                 const Divider(),
@@ -428,16 +500,26 @@ class SettingsScreen extends ConsumerWidget {
                   leading: const Icon(FluentIcons.database),
                   title: const Text('Database Location'),
                   subtitle: const Text('View where your data is stored'),
-                  trailing: Button(
-                    child: const Text('Show'),
-                    onPressed: () => _showDatabaseLocation(context),
+                  trailing: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Button(
+                        child: const Text('Show Path'),
+                        onPressed: () => _showDatabaseLocation(context),
+                      ),
+                      const SizedBox(width: 8),
+                      Button(
+                        child: const Text('Open Folder'),
+                        onPressed: () => _openDatabaseLocation(context),
+                      ),
+                    ],
                   ),
                 ),
                 const Divider(),
                 const ListTile(
                   leading: Icon(FluentIcons.info),
                   title: Text('Version'),
-                  subtitle: Text('Construction Expense Tracker v1.0.0'),
+                  trailing: Text('v1.0.0'),
                 ),
               ],
             ),
