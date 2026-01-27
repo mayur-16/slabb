@@ -5,7 +5,7 @@ description: "A new Flutter project."
 publish_to: 'none' # Remove this line if you wish to publish to pub.dev
 
 
-version: 1.0.0+1
+version: 1.0.0+2
 
 environment:
   sdk: ^3.9.2
@@ -53,10 +53,12 @@ msix_config:
   publisher_display_name: Tequra Solutions
   identity_name: com.slabb.app
   publisher: CN=Msix Testing, O=Msix Testing Corporation, S=Some-State, C=US
-  msix_version: 1.0.0.0
+  msix_version: 1.0.0.1
   logo_path: assets/icon/wallet.png
   architecture: x64
   install_certificate: false
+  start_menu_shortcut: true     
+  desktop_shortcut: true  
 
 flutter_launcher_icons:
   android: false

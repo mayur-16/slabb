@@ -89,79 +89,23 @@ class DashboardScreen extends ConsumerWidget {
                   _StatCard(
                     title: 'Total Vendors',
                     value: stats.totalVendors.toString(),
+                    subtitle: ' ',
                     icon: FluentIcons.people,
                     color: Colors.green,
                   ),
-                  _StatCard(
-                    title: 'Total Expenses',
-                    value: currencyFormat.format(stats.totalExpenses),
-                    subtitle: '${stats.expensesCount} transactions',
-                    icon: FluentIcons.money,
-                    color: Colors.orange,
-                  ),
+                 
                   _StatCard(
                     title: 'This Month',
                     value: currencyFormat.format(stats.monthlyExpenses),
                     subtitle: DateFormat('MMMM yyyy').format(DateTime.now()),
-                    icon: FluentIcons.calendar,
+                    icon: FluentIcons.money,
                     color: Colors.purple,
                   ),
                 ],
               ),
               
-              const SizedBox(height: 32),
-              
-              // Quick Actions
-              Text(
-                'Quick Actions',
-                style: FluentTheme.of(context).typography.subtitle,
-              ),
-              const SizedBox(height: 16),
-              Wrap(
-                spacing: 12,
-                runSpacing: 12,
-                children: [
-                  Button(
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(FluentIcons.add),
-                        SizedBox(width: 8),
-                        Text('Add Expense'),
-                      ],
-                    ),
-                    onPressed: () {
-                      // Navigate to expenses screen
-                    },
-                  ),
-                  Button(
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(FluentIcons.site_scan),
-                        SizedBox(width: 8),
-                        Text('New Site'),
-                      ],
-                    ),
-                    onPressed: () {
-                      // Navigate to sites screen
-                    },
-                  ),
-                  Button(
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Icon(FluentIcons.people),
-                        SizedBox(width: 8),
-                        Text('Add Vendor'),
-                      ],
-                    ),
-                    onPressed: () {
-                      // Navigate to vendors screen
-                    },
-                  ),
-                ],
-              ),
+              const SizedBox(height: 20),
+             
             ],
           ),
         ),
@@ -210,7 +154,7 @@ class _StatCard extends StatelessWidget {
                     color: color.light,
                     borderRadius: BorderRadius.circular(8),
                   ),
-                  child: Icon(icon, size: 24, color: color.normal),
+                  child: Icon(icon, size: 24, color: color.lightest),
                 ),
                 const Spacer(),
               ],

@@ -36,10 +36,12 @@ class MyApp extends StatelessWidget {
         brightness: Brightness.light,
         accentColor: Colors.blue,
         scaffoldBackgroundColor: Colors.white,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       darkTheme: FluentThemeData(
         brightness: Brightness.dark,
         accentColor: Colors.blue,
+        visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
       home: const HomeScreen(),
     );
