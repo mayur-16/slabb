@@ -237,169 +237,170 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => ContentDialog(
+          constraints: BoxConstraints(minWidth: 200 ,maxWidth: MediaQuery.of(context).size.width * 0.4),
           title: Text(expense == null ? 'Add New Expense' : 'Edit Expense'),
-          content: SizedBox(
-            width: 650,
-            child: SingleChildScrollView(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  InfoLabel(
-                    label: 'Site *',
-                    child: ComboBox<int>(
-                      value: selectedSiteId,
-                      placeholder: const Text('Select site'),
-                      items: sites
-                          .map(
-                            (site) => ComboBoxItem(
-                              value: site.id,
-                              child: Text(site.name),
-                            ),
-                          )
-                          .toList(),
-                      onChanged: (value) =>
-                          setState(() => selectedSiteId = value),
-                    ),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                InfoLabel(
+                  label: 'Site *',
+                  child: ComboBox<int>(
+                    value: selectedSiteId,
+                    placeholder: const Text('Select site'),
+                    isExpanded: true,
+                    items: sites
+                        .map(
+                          (site) => ComboBoxItem(
+                            value: site.id,
+                            child: Text(site.name,overflow: TextOverflow.ellipsis),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) =>
+                        setState(() => selectedSiteId = value),
                   ),
-                  const SizedBox(height: 16),
-                  InfoLabel(
-                    label: 'Description *',
-                    child: TextBox(
-                      controller: descriptionController,
-                      placeholder: 'Enter expense description',
-                    ),
+                ),
+                const SizedBox(height: 16),
+                InfoLabel(
+                  label: 'Description *',
+                  child: TextBox(
+                    controller: descriptionController,
+                    placeholder: 'Enter expense description',
                   ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'Amount *',
-                          child: TextBox(
-                            controller: amountController,
-                            placeholder: '0.00',
-                            keyboardType: TextInputType.number,
-                            inputFormatters: [
-                              FilteringTextInputFormatter.digitsOnly,
-                            ],
-                            prefix: const Padding(
-                              padding: EdgeInsets.only(left: 8.0),
-                              child: Text('₹'),
-                            ),
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'Amount *',
+                        child: TextBox(
+                          controller: amountController,
+                          placeholder: '0.00',
+                          keyboardType: TextInputType.number,
+                          inputFormatters: [
+                            FilteringTextInputFormatter.digitsOnly,
+                          ],
+                          prefix: const Padding(
+                            padding: EdgeInsets.only(left: 8.0),
+                            child: Text('₹'),
                           ),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'Date *',
-                          child: DatePicker(
-                            selected: selectedDate,
-                            onChanged: (date) =>
-                                setState(() => selectedDate = date),
-                          ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'Date *',
+                        child: DatePicker(
+                          selected: selectedDate,
+                          onChanged: (date) =>
+                              setState(() => selectedDate = date),
                         ),
                       ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'Vendor',
-                          child: ComboBox<int>(
-                            value: selectedVendorId,
-                            placeholder: const Text('Select vendor'),
-                            items: vendors
-                                .map(
-                                  (vendor) => ComboBoxItem(
-                                    value: vendor.id,
-                                    child: Text(vendor.name),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'Vendor',
+                        child: ComboBox<int>(
+                          value: selectedVendorId,
+                          placeholder: const Text('Select vendor'),
+                          isExpanded: true,
+                          
+                          items: vendors
+                              .map(
+                                (vendor) => ComboBoxItem(
+                                  value: vendor.id,
+                                  child: Text(vendor.name,overflow: TextOverflow.ellipsis),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) =>
+                              setState(() => selectedVendorId = value),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'Category',
+                        child: ComboBox<int>(
+                          value: selectedCategoryId,
+                          placeholder: const Text('Select'),
+                          isExpanded: true,
+                          items: categories
+                              .map(
+                                (cat) => ComboBoxItem(
+                                  value: cat.id,
+                                  child: Text(
+                                    cat.name,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                )
-                                .toList(),
-                            onChanged: (value) =>
-                                setState(() => selectedVendorId = value),
-                          ),
+                                ),
+                              )
+                              .toList(),
+                          onChanged: (value) =>
+                              setState(() => selectedCategoryId = value),
                         ),
                       ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'Category',
-                          child: ComboBox<int>(
-                            value: selectedCategoryId,
-                            placeholder: const Text('Select'),
-                            isExpanded: true,
-                            items: categories
-                                .map(
-                                  (cat) => ComboBoxItem(
-                                    value: cat.id,
-                                    child: Text(
-                                      cat.name,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                )
-                                .toList(),
-                            onChanged: (value) =>
-                                setState(() => selectedCategoryId = value),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  Row(
-                    children: [
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'Payment Mode',
-                          child: ComboBox<String>(
-                            value: paymentMode,
-                            items: const [
-                              ComboBoxItem(value: 'Cash', child: Text('Cash')),
-                              ComboBoxItem(
-                                value: 'Cheque',
-                                child: Text('Cheque'),
-                              ),
-                              ComboBoxItem(
-                                value: 'Online',
-                                child: Text('Online'),
-                              ),
-                              ComboBoxItem(value: 'UPI', child: Text('UPI')),
-                              ComboBoxItem(value: 'Card', child: Text('Card')),
-                            ],
-                            onChanged: (value) =>
-                                setState(() => paymentMode = value ?? 'Cash'),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(width: 16),
-                      Expanded(
-                        child: InfoLabel(
-                          label: 'Bill Number',
-                          child: TextBox(
-                            controller: billNumberController,
-                            placeholder: 'Optional',
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 16),
-                  InfoLabel(
-                    label: 'Remarks',
-                    child: TextBox(
-                      controller: remarksController,
-                      placeholder: 'Optional',
-                      maxLines: 2,
                     ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                Row(
+                  children: [
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'Payment Mode',
+                        child: ComboBox<String>(
+                          value: paymentMode,
+                          items: const [
+                            ComboBoxItem(value: 'Cash', child: Text('Cash')),
+                            ComboBoxItem(
+                              value: 'Cheque',
+                              child: Text('Cheque'),
+                            ),
+                            ComboBoxItem(
+                              value: 'Online',
+                              child: Text('Online'),
+                            ),
+                            ComboBoxItem(value: 'UPI', child: Text('UPI')),
+                            ComboBoxItem(value: 'Card', child: Text('Card')),
+                          ],
+                          onChanged: (value) =>
+                              setState(() => paymentMode = value ?? 'Cash'),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: InfoLabel(
+                        label: 'Bill Number',
+                        child: TextBox(
+                          controller: billNumberController,
+                          placeholder: 'Optional',
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                InfoLabel(
+                  label: 'Remarks',
+                  child: TextBox(
+                    controller: remarksController,
+                    placeholder: 'Optional',
+                    maxLines: 2,
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
           ),
           actions: [
