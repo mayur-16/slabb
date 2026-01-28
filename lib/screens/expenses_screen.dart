@@ -1,4 +1,5 @@
 import 'package:fluent_ui/fluent_ui.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
@@ -23,11 +24,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     final sites = await db.getAllSites();
     final vendors = await db.getAllVendors();
     final categories = await db.getAllCategories();
-    
+
     final sitesMap = {for (var s in sites) s.id: s.name};
     final vendorsMap = {for (var v in vendors) v.id: v.name};
     final categoriesMap = {for (var c in categories) c.id: c.name};
-    
+
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
     final dateFormat = DateFormat('dd MMM yyyy');
 
@@ -69,24 +70,49 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                 ),
               ),
               const SizedBox(height: 16),
-              
+
               // Details
-              _detailRow(FluentIcons.real_estate, 'Site', sitesMap[expense.siteId] ?? 'Unknown'),
+              _detailRow(
+                FluentIcons.real_estate,
+                'Site',
+                sitesMap[expense.siteId] ?? 'Unknown',
+              ),
               _detailRow(FluentIcons.edit, 'Description', expense.description),
-              _detailRow(FluentIcons.calendar, 'Date', dateFormat.format(expense.date)),
-              
+              _detailRow(
+                FluentIcons.calendar,
+                'Date',
+                dateFormat.format(expense.date),
+              ),
+
               if (expense.vendorId != null)
-                _detailRow(FluentIcons.people, 'Vendor', vendorsMap[expense.vendorId] ?? 'Unknown'),
-              
+                _detailRow(
+                  FluentIcons.people,
+                  'Vendor',
+                  vendorsMap[expense.vendorId] ?? 'Unknown',
+                ),
+
               if (expense.categoryId != null)
-                _detailRow(FluentIcons.tag, 'Category', categoriesMap[expense.categoryId] ?? 'Unknown'),
-              
-              if (expense.paymentMode != null && expense.paymentMode!.isNotEmpty)
-                _detailRow(FluentIcons.payment_card, 'Payment Mode', expense.paymentMode!),
-              
+                _detailRow(
+                  FluentIcons.tag,
+                  'Category',
+                  categoriesMap[expense.categoryId] ?? 'Unknown',
+                ),
+
+              if (expense.paymentMode != null &&
+                  expense.paymentMode!.isNotEmpty)
+                _detailRow(
+                  FluentIcons.payment_card,
+                  'Payment Mode',
+                  expense.paymentMode!,
+                ),
+
               if (expense.billNumber != null && expense.billNumber!.isNotEmpty)
-                _detailRow(FluentIcons.receipt_processing, 'Bill Number', expense.billNumber!),
-              
+                _detailRow(
+                  FluentIcons.receipt_processing,
+                  'Bill Number',
+                  expense.billNumber!,
+                ),
+
               if (expense.remarks != null && expense.remarks!.isNotEmpty)
                 _detailRow(FluentIcons.comment, 'Remarks', expense.remarks!),
             ],
@@ -165,14 +191,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     if (confirmed == true) {
       final db = ref.read(databaseProvider);
       await db.deleteExpense(expense.id);
-      
+
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return const InfoBar(
-            title: Text('Expense deleted successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return const InfoBar(
+              title: Text('Expense deleted successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     }
   }
@@ -185,13 +214,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
 
     if (!mounted) return;
 
-    final descriptionController = TextEditingController(text: expense?.description ?? '');
+    final descriptionController = TextEditingController(
+      text: expense?.description ?? '',
+    );
     final amountController = TextEditingController(
       text: expense?.amount.toString() ?? '',
     );
-    final billNumberController = TextEditingController(text: expense?.billNumber ?? '');
-    final remarksController = TextEditingController(text: expense?.remarks ?? '');
-    
+    final billNumberController = TextEditingController(
+      text: expense?.billNumber ?? '',
+    );
+    final remarksController = TextEditingController(
+      text: expense?.remarks ?? '',
+    );
+
     int? selectedSiteId = expense?.siteId;
     int? selectedVendorId = expense?.vendorId;
     int? selectedCategoryId = expense?.categoryId;
@@ -204,7 +239,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         builder: (context, setState) => ContentDialog(
           title: Text(expense == null ? 'Add New Expense' : 'Edit Expense'),
           content: SizedBox(
-            width: 600,
+            width: 650,
             child: SingleChildScrollView(
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -215,11 +250,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     child: ComboBox<int>(
                       value: selectedSiteId,
                       placeholder: const Text('Select site'),
-                      items: sites.map((site) => ComboBoxItem(
-                        value: site.id,
-                        child: Text(site.name),
-                      )).toList(),
-                      onChanged: (value) => setState(() => selectedSiteId = value),
+                      items: sites
+                          .map(
+                            (site) => ComboBoxItem(
+                              value: site.id,
+                              child: Text(site.name),
+                            ),
+                          )
+                          .toList(),
+                      onChanged: (value) =>
+                          setState(() => selectedSiteId = value),
                     ),
                   ),
                   const SizedBox(height: 16),
@@ -239,6 +279,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           child: TextBox(
                             controller: amountController,
                             placeholder: '0.00',
+                            keyboardType: TextInputType.number,
+                            inputFormatters: [
+                              FilteringTextInputFormatter.digitsOnly,
+                            ],
                             prefix: const Padding(
                               padding: EdgeInsets.only(left: 8.0),
                               child: Text('₹'),
@@ -252,7 +296,8 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           label: 'Date *',
                           child: DatePicker(
                             selected: selectedDate,
-                            onChanged: (date) => setState(() => selectedDate = date),
+                            onChanged: (date) =>
+                                setState(() => selectedDate = date),
                           ),
                         ),
                       ),
@@ -267,11 +312,16 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           child: ComboBox<int>(
                             value: selectedVendorId,
                             placeholder: const Text('Select vendor'),
-                            items: vendors.map((vendor) => ComboBoxItem(
-                              value: vendor.id,
-                              child: Text(vendor.name),
-                            )).toList(),
-                            onChanged: (value) => setState(() => selectedVendorId = value),
+                            items: vendors
+                                .map(
+                                  (vendor) => ComboBoxItem(
+                                    value: vendor.id,
+                                    child: Text(vendor.name),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => selectedVendorId = value),
                           ),
                         ),
                       ),
@@ -281,12 +331,21 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           label: 'Category',
                           child: ComboBox<int>(
                             value: selectedCategoryId,
-                            placeholder: const Text('Select category'),
-                            items: categories.map((cat) => ComboBoxItem(
-                              value: cat.id,
-                              child: Text(cat.name),
-                            )).toList(),
-                            onChanged: (value) => setState(() => selectedCategoryId = value),
+                            placeholder: const Text('Select'),
+                            isExpanded: true,
+                            items: categories
+                                .map(
+                                  (cat) => ComboBoxItem(
+                                    value: cat.id,
+                                    child: Text(
+                                      cat.name,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                )
+                                .toList(),
+                            onChanged: (value) =>
+                                setState(() => selectedCategoryId = value),
                           ),
                         ),
                       ),
@@ -302,12 +361,19 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                             value: paymentMode,
                             items: const [
                               ComboBoxItem(value: 'Cash', child: Text('Cash')),
-                              ComboBoxItem(value: 'Cheque', child: Text('Cheque')),
-                              ComboBoxItem(value: 'Online', child: Text('Online')),
+                              ComboBoxItem(
+                                value: 'Cheque',
+                                child: Text('Cheque'),
+                              ),
+                              ComboBoxItem(
+                                value: 'Online',
+                                child: Text('Online'),
+                              ),
                               ComboBoxItem(value: 'UPI', child: Text('UPI')),
                               ComboBoxItem(value: 'Card', child: Text('Card')),
                             ],
-                            onChanged: (value) => setState(() => paymentMode = value ?? 'Cash'),
+                            onChanged: (value) =>
+                                setState(() => paymentMode = value ?? 'Cash'),
                           ),
                         ),
                       ),
@@ -344,66 +410,89 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
             FilledButton(
               child: const Text('Save'),
               onPressed: () async {
-                if (selectedSiteId == null || descriptionController.text.trim().isEmpty || amountController.text.trim().isEmpty) {
-                  await displayInfoBar(context, builder: (context, close) {
-                    return const InfoBar(
-                      title: Text('Please fill all required fields'),
-                      severity: InfoBarSeverity.warning,
-                    );
-                  });
+                if (selectedSiteId == null ||
+                    descriptionController.text.trim().isEmpty ||
+                    amountController.text.trim().isEmpty) {
+                  await displayInfoBar(
+                    context,
+                    builder: (context, close) {
+                      return const InfoBar(
+                        title: Text('Please fill all required fields'),
+                        severity: InfoBarSeverity.warning,
+                      );
+                    },
+                  );
                   return;
                 }
 
                 final amount = double.tryParse(amountController.text.trim());
                 if (amount == null || amount <= 0) {
-                  await displayInfoBar(context, builder: (context, close) {
-                    return const InfoBar(
-                      title: Text('Invalid amount'),
-                      severity: InfoBarSeverity.warning,
-                    );
-                  });
+                  await displayInfoBar(
+                    context,
+                    builder: (context, close) {
+                      return const InfoBar(
+                        title: Text('Invalid amount'),
+                        severity: InfoBarSeverity.warning,
+                      );
+                    },
+                  );
                   return;
                 }
 
                 if (expense == null) {
-                  await db.insertExpense(ExpensesCompanion(
-                    siteId: drift.Value(selectedSiteId!),
-                    vendorId: drift.Value(selectedVendorId),
-                    categoryId: drift.Value(selectedCategoryId),
-                    description: drift.Value(descriptionController.text.trim()),
-                    amount: drift.Value(amount),
-                    date: drift.Value(selectedDate),
-                    paymentMode: drift.Value(paymentMode),
-                    billNumber: drift.Value(billNumberController.text.trim()),
-                    remarks: drift.Value(remarksController.text.trim()),
-                  ));
-                } else {
-                  // For updates, use toCompanion() and update method
-                  await db.update(db.expenses).replace(
+                  await db.insertExpense(
                     ExpensesCompanion(
-                      id: drift.Value(expense.id),
                       siteId: drift.Value(selectedSiteId!),
                       vendorId: drift.Value(selectedVendorId),
                       categoryId: drift.Value(selectedCategoryId),
-                      description: drift.Value(descriptionController.text.trim()),
+                      description: drift.Value(
+                        descriptionController.text.trim(),
+                      ),
                       amount: drift.Value(amount),
                       date: drift.Value(selectedDate),
                       paymentMode: drift.Value(paymentMode),
                       billNumber: drift.Value(billNumberController.text.trim()),
                       remarks: drift.Value(remarksController.text.trim()),
-                      createdAt: drift.Value(expense.createdAt),
                     ),
                   );
+                } else {
+                  // For updates, use toCompanion() and update method
+                  await db
+                      .update(db.expenses)
+                      .replace(
+                        ExpensesCompanion(
+                          id: drift.Value(expense.id),
+                          siteId: drift.Value(selectedSiteId!),
+                          vendorId: drift.Value(selectedVendorId),
+                          categoryId: drift.Value(selectedCategoryId),
+                          description: drift.Value(
+                            descriptionController.text.trim(),
+                          ),
+                          amount: drift.Value(amount),
+                          date: drift.Value(selectedDate),
+                          paymentMode: drift.Value(paymentMode),
+                          billNumber: drift.Value(
+                            billNumberController.text.trim(),
+                          ),
+                          remarks: drift.Value(remarksController.text.trim()),
+                          createdAt: drift.Value(expense.createdAt),
+                        ),
+                      );
                 }
 
                 if (context.mounted) {
                   Navigator.pop(context);
-                  await displayInfoBar(context, builder: (context, close) {
-                    return InfoBar(
-                      title: Text(expense == null ? 'Expense added' : 'Expense updated'),
-                      severity: InfoBarSeverity.success,
-                    );
-                  });
+                  await displayInfoBar(
+                    context,
+                    builder: (context, close) {
+                      return InfoBar(
+                        title: Text(
+                          expense == null ? 'Expense added' : 'Expense updated',
+                        ),
+                        severity: InfoBarSeverity.success,
+                      );
+                    },
+                  );
                 }
               },
             ),
@@ -469,7 +558,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       color: Colors.orange.light.withOpacity(0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child:  Icon(FluentIcons.money, color: Colors.orange),
+                    child: Icon(FluentIcons.money, color: Colors.orange),
                   ),
                   title: Text(expense.description),
                   subtitle: Text(
@@ -480,10 +569,11 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     children: [
                       Text(
                         currencyFormat.format(expense.amount),
-                        style: FluentTheme.of(context).typography.bodyLarge?.copyWith(
-                          fontWeight: FontWeight.bold,
-                          color: Colors.orange,
-                        ),
+                        style: FluentTheme.of(context).typography.bodyLarge
+                            ?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              color: Colors.orange,
+                            ),
                       ),
                       const SizedBox(width: 16),
                       IconButton(
