@@ -123,7 +123,7 @@ class AppDatabase extends _$AppDatabase {
     if (existing.isEmpty) {
       final defaultCategories = [
         'Materials',
-        'Labor',
+        'Labour',
         'Equipment Rental',
         'Transportation',
         'Utilities',
