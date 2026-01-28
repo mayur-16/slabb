@@ -1,16 +1,13 @@
-# slabb
+A Flutter Windows/Mac application for Expense tracking of construction sites.
 
-A new Flutter project.
 
-## Getting Started
+# for running launcher icons
+dart run flutter_launcher_icons
 
-This project is a starting point for a Flutter application.
 
-A few resources to get you started if this is your first Flutter project:
+# wireless debugging
 
-- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
-- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+wireless debug -> adb connect 192.168.20.7:5555
 
-For help getting started with Flutter development, view the
-[online documentation](https://docs.flutter.dev/), which offers tutorials,
-samples, guidance on mobile development, and a full API reference.
+# generate tree structure
+tree -a -I '.dart_tool|.idea|android|ios|web|macos|windows|build|.git' > structure.txt

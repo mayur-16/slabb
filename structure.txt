@@ -1,0 +1,31 @@
+.
+├── .flutter-plugins-dependencies
+├── .github
+│   └── workflows
+│       └── build-windows.yml
+├── .gitignore
+├── .metadata
+├── README.md
+├── analysis_options.yaml
+├── assets
+│   └── icon
+│       └── wallet.png
+├── lib
+│   ├── database
+│   │   ├── database.dart
+│   │   └── database.g.dart
+│   ├── main.dart
+│   └── screens
+│       ├── dashboard_screen.dart
+│       ├── expenses_screen.dart
+│       ├── home_screen.dart
+│       ├── reports_screen.dart
+│       ├── settings_screen.dart
+│       ├── sites_screen.dart
+│       └── vendors_screen.dart
+├── pubspec.lock
+├── pubspec.yaml
+├── slabb.iml
+└── structure.txt
+
+8 directories, 21 files
