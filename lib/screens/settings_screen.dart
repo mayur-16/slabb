@@ -7,6 +7,7 @@ import 'package:path/path.dart' as p;
 import 'package:csv/csv.dart';
 import 'package:drift/drift.dart' as drift;
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../main.dart';
 import '../database/database.dart';
 
@@ -524,6 +525,96 @@ class SettingsScreen extends ConsumerWidget {
               ],
             ),
           ),
+
+const SizedBox(height: 32),
+
+
+           // Branding Footer
+           Text(
+            'About Us',
+            style: FluentTheme.of(context).typography.subtitle,
+          ),
+          const SizedBox(height: 16),
+          Card(
+            child: Padding(
+              padding: const EdgeInsets.all(24.0),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Image.asset(
+                    'assets/icon/wallet.png',
+                    width: 40,
+                    height: 40,
+                    errorBuilder: (context, error, stackTrace) {
+                      return const Icon(FluentIcons.processing, size: 64);
+                    },
+                  ),
+                 
+                  const SizedBox(height: 16),
+                  const Divider(),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Developed by Tequra Solutions',
+                    style: TextStyle(fontWeight: FontWeight.w600),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Icon(FluentIcons.mail, size: 14),
+                      const SizedBox(width: 6),
+                      HyperlinkButton(
+                        onPressed: () async {
+                          // Open email client
+                          final Uri emailUri = Uri(
+                            scheme: 'mailto',
+                            path: 'mayur.acharya.contact@gmail.com',
+                            query: 'subject=Slabb Support',
+                          );
+                          if (await canLaunchUrl(emailUri)) {
+                            await launchUrl(emailUri);
+                          }
+                        },
+                        child: const Text(
+                          'mayur.acharya.contact@gmail.com',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.start,
+                    children: [
+                      const Icon(FluentIcons.globe, size: 14),
+                      const SizedBox(width: 6),
+                      HyperlinkButton(
+                        onPressed: () async {
+                          final Uri url = Uri.parse('https://mayur-16.github.io/portfolio');
+                          if (await canLaunchUrl(url)) {
+                            await launchUrl(url);
+                          }
+                        },
+                        child: const Text(
+                          'Developer Portfolio',
+                          style: TextStyle(fontSize: 12),
+                        ),
+                      ),
+                    ],
+                  ),
+                         
+                ],
+              ),
+            ),
+          ),
+ const SizedBox(height: 20),
+           Center(
+                    child: Text(
+                      '© ${DateTime.now().year} Tequra Solutions. All rights reserved.',
+                      style:  TextStyle(fontSize: 10,),
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
         ],
       ),
     );
