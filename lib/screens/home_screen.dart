@@ -19,7 +19,7 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
 
   final List<NavigationPaneItem> _items = [
     PaneItem(
-      icon: const Icon(FluentIcons.home),
+      icon: const Icon(FluentIcons.view_dashboard),
       title: const Text('Dashboard'),
       body: const DashboardScreen(),
     ),

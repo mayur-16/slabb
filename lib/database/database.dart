@@ -13,7 +13,6 @@ class Sites extends Table {
   TextColumn get location => text().nullable()();
   TextColumn get description => text().nullable()();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
-  BoolColumn get isActive => boolean().withDefault(const Constant(true))();
 }
 
 // Vendors Table
@@ -58,8 +57,6 @@ class AppDatabase extends _$AppDatabase {
 
   // Sites Operations
   Future<List<Site>> getAllSites() => select(sites).get();
-  Future<List<Site>> getActiveSites() => 
-    (select(sites)..where((s) => s.isActive.equals(true))).get();
   
   Future<int> insertSite(SitesCompanion site) => into(sites).insert(site);
   Future<int> deleteSite(int id) => (delete(sites)..where((s) => s.id.equals(id))).go();

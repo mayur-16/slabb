@@ -66,14 +66,6 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
                   Text('Created: ${dateFormat.format(site.createdAt)}'),
                 ],
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  const Icon(FluentIcons.build_queue, size: 16),
-                  const SizedBox(width: 8),
-                  Text('Status: ${site.isActive ? "Active" : "Inactive"}'),
-                ],
-              ),
               const SizedBox(height: 16),
               const Divider(),
               const SizedBox(height: 16),
@@ -87,7 +79,7 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.light.withOpacity(0.1),
+                  color: Colors.blue.light.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.blue.light),
                 ),
@@ -104,9 +96,9 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
                         const SizedBox(height: 4),
                         Text(
                           currencyFormat.format(totalExpenses),
-                          style: FluentTheme.of(context).typography.title?.copyWith(
-                            color: Colors.blue,
-                          ),
+                          style: FluentTheme.of(
+                            context,
+                          ).typography.title?.copyWith(color: Colors.blue),
                         ),
                       ],
                     ),
@@ -164,15 +156,17 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
         ),
         actions: [
           Button(
+            child: const Text('Close'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          FilledButton(
             child: const Text('Edit'),
             onPressed: () {
               Navigator.pop(context);
               _showAddEditDialog(site: site);
             },
-          ),
-          FilledButton(
-            child: const Text('Close'),
-            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -181,9 +175,12 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
 
   void _showAddEditDialog({Site? site}) {
     final nameController = TextEditingController(text: site?.name ?? '');
-    final locationController = TextEditingController(text: site?.location ?? '');
-    final descriptionController = TextEditingController(text: site?.description ?? '');
-    bool? isActive = site?.isActive ?? true;
+    final locationController = TextEditingController(
+      text: site?.location ?? '',
+    );
+    final descriptionController = TextEditingController(
+      text: site?.description ?? '',
+    );
 
     showDialog(
       context: context,
@@ -220,12 +217,6 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
                     maxLines: 3,
                   ),
                 ),
-                const SizedBox(height: 16),
-                Checkbox(
-                  checked: isActive,
-                  onChanged: (value) => setState(() => isActive = value),
-                  content: const Text('Active'),
-                ),
               ],
             ),
           ),
@@ -238,47 +229,63 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
               child: const Text('Save'),
               onPressed: () async {
                 if (nameController.text.trim().isEmpty) {
-                  await displayInfoBar(context, builder: (context, close) {
-                    return const InfoBar(
-                      title: Text('Site name is required'),
-                      severity: InfoBarSeverity.warning,
-                    );
-                  });
+                  await displayInfoBar(
+                    context,
+                    builder: (context, close) {
+                      return const InfoBar(
+                        title: Text('Site name is required'),
+                        severity: InfoBarSeverity.warning,
+                      );
+                    },
+                  );
                   return;
                 }
 
                 final db = ref.read(databaseProvider);
-                
+
                 if (site == null) {
                   // Add new
-                  await db.insertSite(SitesCompanion(
-                    name: drift.Value(nameController.text.trim()),
-                    location: drift.Value(locationController.text.trim()),
-                    description: drift.Value(descriptionController.text.trim()),
-                    isActive: drift.Value(isActive ?? true),
-                  ));
-                } else {
-                  // Update existing
-                  await db.update(db.sites).replace(
+                  await db.insertSite(
                     SitesCompanion(
-                      id: drift.Value(site.id),
                       name: drift.Value(nameController.text.trim()),
                       location: drift.Value(locationController.text.trim()),
-                      description: drift.Value(descriptionController.text.trim()),
-                      isActive: drift.Value(isActive ?? true),
-                      createdAt: drift.Value(site.createdAt),
+                      description: drift.Value(
+                        descriptionController.text.trim(),
+                      ),
                     ),
                   );
+                } else {
+                  // Update existing
+                  await db
+                      .update(db.sites)
+                      .replace(
+                        SitesCompanion(
+                          id: drift.Value(site.id),
+                          name: drift.Value(nameController.text.trim()),
+                          location: drift.Value(locationController.text.trim()),
+                          description: drift.Value(
+                            descriptionController.text.trim(),
+                          ),
+                          createdAt: drift.Value(site.createdAt),
+                        ),
+                      );
                 }
 
                 if (context.mounted) {
                   Navigator.pop(context);
-                  await displayInfoBar(context, builder: (context, close) {
-                    return InfoBar(
-                      title: Text(site == null ? 'Site added successfully' : 'Site updated successfully'),
-                      severity: InfoBarSeverity.success,
-                    );
-                  });
+                  await displayInfoBar(
+                    context,
+                    builder: (context, close) {
+                      return InfoBar(
+                        title: Text(
+                          site == null
+                              ? 'Site added successfully'
+                              : 'Site updated successfully',
+                        ),
+                        severity: InfoBarSeverity.success,
+                      );
+                    },
+                  );
                 }
               },
             ),
@@ -312,14 +319,17 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
     if (confirmed == true) {
       final db = ref.read(databaseProvider);
       await db.deleteSite(site.id);
-      
+
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return const InfoBar(
-            title: Text('Site deleted successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return const InfoBar(
+              title: Text('Site deleted successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     }
   }
@@ -372,28 +382,16 @@ class _SitesScreenState extends ConsumerState<SitesScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: site.isActive 
-                        ? Colors.green.light.withOpacity(0.2)
-                        : Colors.grey.withOpacity(0.2),
+                      color: Colors.green.light.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: Icon(
-                      FluentIcons.real_estate,
-                      color: site.isActive ? Colors.green : Colors.grey,
-                    ),
+                    child: Icon(FluentIcons.real_estate, color: Colors.green),
                   ),
                   title: Text(site.name),
-                  subtitle: site.location != null
-                    ? Text(site.location!)
-                    : null,
+                  subtitle: site.location != null ? Text(site.location!) : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (!site.isActive)
-                         Container(
-                          padding: EdgeInsets.only(right: 8.0),
-                          child: Text('Inactive'),
-                        ),
                       IconButton(
                         icon: const Icon(FluentIcons.edit),
                         onPressed: () => _showAddEditDialog(site: site),

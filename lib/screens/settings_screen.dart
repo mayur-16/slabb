@@ -25,7 +25,8 @@ class SettingsScreen extends ConsumerWidget {
 
       if (result == null) return;
 
-      const templateContent = 'Name,Contact Person,Phone,Email,Address\n'
+      const templateContent =
+          'Name,Contact Person,Phone,Email,Address\n'
           'ABC Suppliers,John Doe,9876543210,john@abc.com,123 Main Street\n'
           'XYZ Hardware,Jane Smith,9876543211,jane@xyz.com,456 Oak Avenue';
 
@@ -33,22 +34,28 @@ class SettingsScreen extends ConsumerWidget {
       await file.writeAsString(templateContent);
 
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return const InfoBar(
-            title: Text('Template downloaded successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return const InfoBar(
+              title: Text('Template downloaded successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('Download failed'),
-            content: Text(e.toString()),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('Download failed'),
+              content: Text(e.toString()),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -57,7 +64,7 @@ class SettingsScreen extends ConsumerWidget {
     try {
       final dbFolder = await getApplicationDocumentsDirectory();
       final dbPath = p.join(dbFolder.path, 'ConstructionExpenses');
-      
+
       if (Platform.isMacOS) {
         await Process.run('open', [dbPath]);
       } else if (Platform.isWindows) {
@@ -65,13 +72,16 @@ class SettingsScreen extends ConsumerWidget {
       }
     } catch (e) {
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('Failed to open location'),
-            content: Text(e.toString()),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('Failed to open location'),
+              content: Text(e.toString()),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -80,16 +90,21 @@ class SettingsScreen extends ConsumerWidget {
     try {
       // Get the database file
       final dbFolder = await getApplicationDocumentsDirectory();
-      final dbFile = File(p.join(dbFolder.path, 'ConstructionExpenses', 'expenses.db'));
+      final dbFile = File(
+        p.join(dbFolder.path, 'ConstructionExpenses', 'expenses.db'),
+      );
 
       if (!await dbFile.exists()) {
         if (context.mounted) {
-          await displayInfoBar(context, builder: (context, close) {
-            return const InfoBar(
-              title: Text('No database found'),
-              severity: InfoBarSeverity.error,
-            );
-          });
+          await displayInfoBar(
+            context,
+            builder: (context, close) {
+              return const InfoBar(
+                title: Text('No database found'),
+                severity: InfoBarSeverity.error,
+              );
+            },
+          );
         }
         return;
       }
@@ -97,7 +112,8 @@ class SettingsScreen extends ConsumerWidget {
       // Let user choose save location
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Save Backup',
-        fileName: 'construction_expenses_backup_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.db',
+        fileName:
+            'construction_expenses_backup_${DateFormat('yyyyMMdd_HHmmss').format(DateTime.now())}.db',
         type: FileType.custom,
         allowedExtensions: ['db'],
       );
@@ -108,22 +124,28 @@ class SettingsScreen extends ConsumerWidget {
       await dbFile.copy(result);
 
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return const InfoBar(
-            title: Text('Backup created successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return const InfoBar(
+              title: Text('Backup created successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('Backup failed'),
-            content: Text(e.toString()),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('Backup failed'),
+              content: Text(e.toString()),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -144,12 +166,15 @@ class SettingsScreen extends ConsumerWidget {
       // Verify backup file exists and is valid
       if (!await backupFile.exists()) {
         if (context.mounted) {
-          await displayInfoBar(context, builder: (context, close) {
-            return const InfoBar(
-              title: Text('Backup file not found'),
-              severity: InfoBarSeverity.error,
-            );
-          });
+          await displayInfoBar(
+            context,
+            builder: (context, close) {
+              return const InfoBar(
+                title: Text('Backup file not found'),
+                severity: InfoBarSeverity.error,
+              );
+            },
+          );
         }
         return;
       }
@@ -179,7 +204,9 @@ class SettingsScreen extends ConsumerWidget {
 
       // Get database location
       final dbFolder = await getApplicationDocumentsDirectory();
-      final dbFile = File(p.join(dbFolder.path, 'ConstructionExpenses', 'expenses.db'));
+      final dbFile = File(
+        p.join(dbFolder.path, 'ConstructionExpenses', 'expenses.db'),
+      );
 
       // Close database connection with timeout to prevent hanging
       final db = ref.read(databaseProvider);
@@ -224,13 +251,16 @@ class SettingsScreen extends ConsumerWidget {
       );
     } catch (e) {
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('Restore failed'),
-            content: Text(e.toString()),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('Restore failed'),
+              content: Text(e.toString()),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -251,41 +281,53 @@ class SettingsScreen extends ConsumerWidget {
 
       if (csvData.isEmpty) {
         if (context.mounted) {
-          await displayInfoBar(context, builder: (context, close) {
-            return const InfoBar(
-              title: Text('CSV file is empty'),
-              severity: InfoBarSeverity.warning,
-            );
-          });
+          await displayInfoBar(
+            context,
+            builder: (context, close) {
+              return const InfoBar(
+                title: Text('CSV file is empty'),
+                severity: InfoBarSeverity.warning,
+              );
+            },
+          );
         }
         return;
       }
 
       // Expected format: Name, Contact Person, Phone, Email, Address
       final vendors = <VendorsCompanion>[];
-      
+
       // Skip header row
       for (var i = 1; i < csvData.length; i++) {
         final row = csvData[i];
         if (row.isEmpty) continue;
 
-        vendors.add(VendorsCompanion(
-          name: drift.Value(row[0].toString().trim()),
-          contactPerson: drift.Value(row.length > 1 ? row[1].toString().trim() : ''),
-          phone: drift.Value(row.length > 2 ? row[2].toString().trim() : ''),
-          email: drift.Value(row.length > 3 ? row[3].toString().trim() : ''),
-          address: drift.Value(row.length > 4 ? row[4].toString().trim() : ''),
-        ));
+        vendors.add(
+          VendorsCompanion(
+            name: drift.Value(row[0].toString().trim()),
+            contactPerson: drift.Value(
+              row.length > 1 ? row[1].toString().trim() : '',
+            ),
+            phone: drift.Value(row.length > 2 ? row[2].toString().trim() : ''),
+            email: drift.Value(row.length > 3 ? row[3].toString().trim() : ''),
+            address: drift.Value(
+              row.length > 4 ? row[4].toString().trim() : '',
+            ),
+          ),
+        );
       }
 
       if (vendors.isEmpty) {
         if (context.mounted) {
-          await displayInfoBar(context, builder: (context, close) {
-            return const InfoBar(
-              title: Text('No valid vendor data found'),
-              severity: InfoBarSeverity.warning,
-            );
-          });
+          await displayInfoBar(
+            context,
+            builder: (context, close) {
+              return const InfoBar(
+                title: Text('No valid vendor data found'),
+                severity: InfoBarSeverity.warning,
+              );
+            },
+          );
         }
         return;
       }
@@ -294,22 +336,28 @@ class SettingsScreen extends ConsumerWidget {
       await db.bulkInsertVendors(vendors);
 
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: Text('${vendors.length} vendors imported successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: Text('${vendors.length} vendors imported successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('Import failed'),
-            content: Text(e.toString()),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('Import failed'),
+              content: Text(e.toString()),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -329,18 +377,30 @@ class SettingsScreen extends ConsumerWidget {
 
       // Prepare CSV data
       final csvData = [
-        ['Date', 'Site', 'Description', 'Category', 'Vendor', 'Amount', 'Payment Mode', 'Bill Number', 'Remarks'],
-        ...expenses.map((e) => [
-          DateFormat('dd/MM/yyyy').format(e.date),
-          sitesMap[e.siteId] ?? '',
-          e.description,
-          e.categoryId != null ? categoriesMap[e.categoryId] ?? '' : '',
-          e.vendorId != null ? vendorsMap[e.vendorId] ?? '' : '',
-          e.amount.toString(),
-          e.paymentMode ?? '',
-          e.billNumber ?? '',
-          e.remarks ?? '',
-        ]),
+        [
+          'Date',
+          'Site',
+          'Description',
+          'Category',
+          'Vendor',
+          'Amount',
+          'Payment Mode',
+          'Bill Number',
+          'Remarks',
+        ],
+        ...expenses.map(
+          (e) => [
+            DateFormat('dd/MM/yyyy').format(e.date),
+            sitesMap[e.siteId] ?? '',
+            e.description,
+            e.categoryId != null ? categoriesMap[e.categoryId] ?? '' : '',
+            e.vendorId != null ? vendorsMap[e.vendorId] ?? '' : '',
+            e.amount.toString(),
+            e.paymentMode ?? '',
+            e.billNumber ?? '',
+            e.remarks ?? '',
+          ],
+        ),
       ];
 
       final csv = const ListToCsvConverter().convert(csvData);
@@ -348,7 +408,8 @@ class SettingsScreen extends ConsumerWidget {
       // Let user choose save location
       final result = await FilePicker.platform.saveFile(
         dialogTitle: 'Export Expenses',
-        fileName: 'expenses_${DateFormat('yyyyMMdd').format(DateTime.now())}.csv',
+        fileName:
+            'expenses_${DateFormat('yyyyMMdd').format(DateTime.now())}.csv',
         type: FileType.custom,
         allowedExtensions: ['csv'],
       );
@@ -360,22 +421,28 @@ class SettingsScreen extends ConsumerWidget {
       await file.writeAsString(csv);
 
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return const InfoBar(
-            title: Text('Expenses exported successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return const InfoBar(
+              title: Text('Expenses exported successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     } catch (e) {
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return InfoBar(
-            title: const Text('Export failed'),
-            content: Text(e.toString()),
-            severity: InfoBarSeverity.error,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return InfoBar(
+              title: const Text('Export failed'),
+              content: Text(e.toString()),
+              severity: InfoBarSeverity.error,
+            );
+          },
+        );
       }
     }
   }
@@ -404,9 +471,7 @@ class SettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return ScaffoldPage(
-      header: const PageHeader(
-        title: Text('Settings'),
-      ),
+      header: const PageHeader(title: Text('Settings')),
       content: ListView(
         padding: const EdgeInsets.all(24),
         children: [
@@ -451,12 +516,14 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 16),
           Card(
-                          child: Column(
+            child: Column(
               children: [
                 ListTile(
                   leading: const Icon(FluentIcons.import),
                   title: const Text('Import Vendors'),
-                  subtitle: const Text('Import vendors from CSV (Name, Contact, Phone, Email, Address)'),
+                  subtitle: const Text(
+                    'Import vendors from CSV (Name, Contact, Phone, Email, Address)',
+                  ),
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -526,14 +593,10 @@ class SettingsScreen extends ConsumerWidget {
             ),
           ),
 
-const SizedBox(height: 32),
+          const SizedBox(height: 32),
 
-
-           // Branding Footer
-           Text(
-            'About Us',
-            style: FluentTheme.of(context).typography.subtitle,
-          ),
+          // Branding Footer
+          Text('About Us', style: FluentTheme.of(context).typography.subtitle),
           const SizedBox(height: 16),
           Card(
             child: Padding(
@@ -549,7 +612,7 @@ const SizedBox(height: 32),
                       return const Icon(FluentIcons.processing, size: 64);
                     },
                   ),
-                 
+
                   const SizedBox(height: 16),
                   const Divider(),
                   const SizedBox(height: 16),
@@ -590,7 +653,9 @@ const SizedBox(height: 32),
                       const SizedBox(width: 6),
                       HyperlinkButton(
                         onPressed: () async {
-                          final Uri url = Uri.parse('https://mayur-16.github.io/portfolio');
+                          final Uri url = Uri.parse(
+                            'https://mayur-16.github.io/portfolio',
+                          );
                           if (await canLaunchUrl(url)) {
                             await launchUrl(url);
                           }
@@ -602,19 +667,18 @@ const SizedBox(height: 32),
                       ),
                     ],
                   ),
-                         
                 ],
               ),
             ),
           ),
- const SizedBox(height: 20),
-           Center(
-                    child: Text(
-                      '© ${DateTime.now().year} Tequra Solutions. All rights reserved.',
-                      style:  TextStyle(fontSize: 10,),
-                      textAlign: TextAlign.center,
-                    ),
-                  ),
+          const SizedBox(height: 20),
+          Center(
+            child: Text(
+              '© ${DateTime.now().year} Tequra Solutions. All rights reserved.',
+              style: TextStyle(fontSize: 10),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ],
       ),
     );

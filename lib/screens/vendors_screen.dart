@@ -20,12 +20,17 @@ class VendorsScreen extends ConsumerStatefulWidget {
 class _VendorsScreenState extends ConsumerState<VendorsScreen> {
   void _showVendorDetails(Vendor vendor) async {
     final db = ref.read(databaseProvider);
-    
+
     // Get all expenses for this vendor
     final allExpenses = await db.getAllExpenses();
-    final vendorExpenses = allExpenses.where((e) => e.vendorId == vendor.id).toList();
-    final totalExpenses = vendorExpenses.fold<double>(0, (sum, e) => sum + e.amount);
-    
+    final vendorExpenses = allExpenses
+        .where((e) => e.vendorId == vendor.id)
+        .toList();
+    final totalExpenses = vendorExpenses.fold<double>(
+      0,
+      (sum, e) => sum + e.amount,
+    );
+
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
     final dateFormat = DateFormat('dd MMM yyyy');
 
@@ -42,7 +47,8 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // Vendor Info
-              if (vendor.contactPerson != null && vendor.contactPerson!.isNotEmpty) ...[
+              if (vendor.contactPerson != null &&
+                  vendor.contactPerson!.isNotEmpty) ...[
                 Row(
                   children: [
                     const Icon(FluentIcons.contact, size: 16),
@@ -103,7 +109,7 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.blue.light.withOpacity(0.1),
+                  color: Colors.blue.light.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.blue.light),
                 ),
@@ -120,9 +126,9 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                         const SizedBox(height: 4),
                         Text(
                           currencyFormat.format(totalExpenses),
-                          style: FluentTheme.of(context).typography.title?.copyWith(
-                            color: Colors.blue,
-                          ),
+                          style: FluentTheme.of(
+                            context,
+                          ).typography.title?.copyWith(color: Colors.blue),
                         ),
                       ],
                     ),
@@ -155,7 +161,9 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                   height: 200,
                   child: ListView.builder(
                     shrinkWrap: true,
-                    itemCount: vendorExpenses.length > 5 ? 5 : vendorExpenses.length,
+                    itemCount: vendorExpenses.length > 5
+                        ? 5
+                        : vendorExpenses.length,
                     itemBuilder: (context, index) {
                       final expense = vendorExpenses[index];
                       return ListTile(
@@ -180,15 +188,17 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
         ),
         actions: [
           Button(
+            child: const Text('Close'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          FilledButton(
             child: const Text('Edit'),
             onPressed: () {
               Navigator.pop(context);
               _showAddEditDialog(vendor: vendor);
             },
-          ),
-          FilledButton(
-            child: const Text('Close'),
-            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -219,24 +229,31 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
     if (confirmed == true) {
       final db = ref.read(databaseProvider);
       await db.deleteVendor(vendor.id);
-      
+
       if (context.mounted) {
-        await displayInfoBar(context, builder: (context, close) {
-          return const InfoBar(
-            title: Text('Vendor deleted successfully'),
-            severity: InfoBarSeverity.success,
-          );
-        });
+        await displayInfoBar(
+          context,
+          builder: (context, close) {
+            return const InfoBar(
+              title: Text('Vendor deleted successfully'),
+              severity: InfoBarSeverity.success,
+            );
+          },
+        );
       }
     }
   }
 
   void _showAddEditDialog({Vendor? vendor}) {
     final nameController = TextEditingController(text: vendor?.name ?? '');
-    final contactPersonController = TextEditingController(text: vendor?.contactPerson ?? '');
+    final contactPersonController = TextEditingController(
+      text: vendor?.contactPerson ?? '',
+    );
     final phoneController = TextEditingController(text: vendor?.phone ?? '');
     final emailController = TextEditingController(text: vendor?.email ?? '');
-    final addressController = TextEditingController(text: vendor?.address ?? '');
+    final addressController = TextEditingController(
+      text: vendor?.address ?? '',
+    );
 
     showDialog(
       context: context,
@@ -310,47 +327,63 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
             child: const Text('Save'),
             onPressed: () async {
               if (nameController.text.trim().isEmpty) {
-                await displayInfoBar(context, builder: (context, close) {
-                  return const InfoBar(
-                    title: Text('Vendor name is required'),
-                    severity: InfoBarSeverity.warning,
-                  );
-                });
+                await displayInfoBar(
+                  context,
+                  builder: (context, close) {
+                    return const InfoBar(
+                      title: Text('Vendor name is required'),
+                      severity: InfoBarSeverity.warning,
+                    );
+                  },
+                );
                 return;
               }
 
               final db = ref.read(databaseProvider);
-              
+
               if (vendor == null) {
-                await db.insertVendor(VendorsCompanion(
-                  name: drift.Value(nameController.text.trim()),
-                  contactPerson: drift.Value(contactPersonController.text.trim()),
-                  phone: drift.Value(phoneController.text.trim()),
-                  email: drift.Value(emailController.text.trim()),
-                  address: drift.Value(addressController.text.trim()),
-                ));
-              } else {
-                await db.update(db.vendors).replace(
+                await db.insertVendor(
                   VendorsCompanion(
-                    id: drift.Value(vendor.id),
                     name: drift.Value(nameController.text.trim()),
-                    contactPerson: drift.Value(contactPersonController.text.trim()),
+                    contactPerson: drift.Value(
+                      contactPersonController.text.trim(),
+                    ),
                     phone: drift.Value(phoneController.text.trim()),
                     email: drift.Value(emailController.text.trim()),
                     address: drift.Value(addressController.text.trim()),
-                    createdAt: drift.Value(vendor.createdAt),
                   ),
                 );
+              } else {
+                await db
+                    .update(db.vendors)
+                    .replace(
+                      VendorsCompanion(
+                        id: drift.Value(vendor.id),
+                        name: drift.Value(nameController.text.trim()),
+                        contactPerson: drift.Value(
+                          contactPersonController.text.trim(),
+                        ),
+                        phone: drift.Value(phoneController.text.trim()),
+                        email: drift.Value(emailController.text.trim()),
+                        address: drift.Value(addressController.text.trim()),
+                        createdAt: drift.Value(vendor.createdAt),
+                      ),
+                    );
               }
 
               if (context.mounted) {
                 Navigator.pop(context);
-                await displayInfoBar(context, builder: (context, close) {
-                  return InfoBar(
-                    title: Text(vendor == null ? 'Vendor added' : 'Vendor updated'),
-                    severity: InfoBarSeverity.success,
-                  );
-                });
+                await displayInfoBar(
+                  context,
+                  builder: (context, close) {
+                    return InfoBar(
+                      title: Text(
+                        vendor == null ? 'Vendor added' : 'Vendor updated',
+                      ),
+                      severity: InfoBarSeverity.success,
+                    );
+                  },
+                );
               }
             },
           ),
@@ -406,15 +439,15 @@ class _VendorsScreenState extends ConsumerState<VendorsScreen> {
                   leading: Container(
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(
-                      color: Colors.blue.light.withOpacity(0.2),
+                      color: Colors.blue.light.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child:  Icon(FluentIcons.people, color: Colors.blue),
+                    child: Icon(FluentIcons.people, color: Colors.blue),
                   ),
                   title: Text(vendor.name),
                   subtitle: vendor.phone != null && vendor.phone!.isNotEmpty
-                    ? Text(vendor.phone!)
-                    : null,
+                      ? Text(vendor.phone!)
+                      : null,
                   trailing: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [

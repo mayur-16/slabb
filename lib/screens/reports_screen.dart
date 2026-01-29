@@ -35,7 +35,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       case ReportType.bySite:
         final sites = await db.getAllSites();
         final sitesMap = {for (var s in sites) s.id: s.name};
-        
+
         for (var expense in expenses) {
           final siteName = sitesMap[expense.siteId] ?? 'Unknown Site';
           report[siteName] = (report[siteName] ?? 0) + expense.amount;
@@ -45,7 +45,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       case ReportType.byVendor:
         final vendors = await db.getAllVendors();
         final vendorsMap = {for (var v in vendors) v.id: v.name};
-        
+
         for (var expense in expenses) {
           if (expense.vendorId != null) {
             final vendorName = vendorsMap[expense.vendorId] ?? 'Unknown Vendor';
@@ -59,13 +59,15 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
       case ReportType.byCategory:
         final categories = await db.getAllCategories();
         final categoriesMap = {for (var c in categories) c.id: c.name};
-        
+
         for (var expense in expenses) {
           if (expense.categoryId != null) {
-            final categoryName = categoriesMap[expense.categoryId] ?? 'Unknown Category';
+            final categoryName =
+                categoriesMap[expense.categoryId] ?? 'Unknown Category';
             report[categoryName] = (report[categoryName] ?? 0) + expense.amount;
           } else {
-            report['Uncategorized'] = (report['Uncategorized'] ?? 0) + expense.amount;
+            report['Uncategorized'] =
+                (report['Uncategorized'] ?? 0) + expense.amount;
           }
         }
         break;
@@ -88,7 +90,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     // Sort by amount descending
     final sortedEntries = report.entries.toList()
       ..sort((a, b) => b.value.compareTo(a.value));
-    
+
     return Map.fromEntries(sortedEntries);
   }
 
@@ -130,21 +132,21 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
     return ScaffoldPage(
       header: PageHeader(
         title: const Text('Reports & Analytics'),
-        commandBar: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Button(
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(FluentIcons.refresh, size: 16),
-                  SizedBox(width: 8),
-                  Text('Refresh'),
-                ],
-              ),
-              onPressed: () => setState(() {}),
+        commandBar: Button(
+          style: ButtonStyle(
+            padding: WidgetStatePropertyAll(
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
             ),
-          ],
+          ),
+          child: const Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(FluentIcons.refresh, size: 14),
+              SizedBox(width: 8),
+              Text('Refresh'),
+            ],
+          ),
+          onPressed: () => setState(() {}),
         ),
       ),
       content: Padding(
@@ -164,7 +166,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       style: FluentTheme.of(context).typography.subtitle,
                     ),
                     const SizedBox(height: 16),
-                    
+
                     // Report Type Selection
                     Row(
                       children: [
@@ -205,47 +207,45 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ),
                       ],
                     ),
-                    
+
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
-                    
+
                     // Date Range
                     Text(
                       'Date Range',
                       style: FluentTheme.of(context).typography.bodyStrong,
                     ),
                     const SizedBox(height: 12),
-                    
+
                     Row(
                       children: [
-                        Expanded(
-                          child: InfoLabel(
-                            label: 'Start Date',
-                            child: DatePicker(
-                              selected: _startDate,
-                              onChanged: (date) => setState(() => _startDate = date),
-                            ),
+                        InfoLabel(
+                          label: 'Start Date',
+                          child: DatePicker(
+                            selected: _startDate,
+                            onChanged: (date) =>
+                                setState(() => _startDate = date),
                           ),
                         ),
-                        const SizedBox(width: 16),
-                        Expanded(
-                          child: InfoLabel(
-                            label: 'End Date',
-                            child: DatePicker(
-                              selected: _endDate,
-                              onChanged: (date) => setState(() => _endDate = date),
-                            ),
+                        const SizedBox(width: 10),
+                        InfoLabel(
+                          label: 'End Date',
+                          child: DatePicker(
+                            selected: _endDate,
+                            onChanged: (date) =>
+                                setState(() => _endDate = date),
                           ),
                         ),
                       ],
                     ),
-                    
-                    const SizedBox(height: 12),
-                    
+
+                    const SizedBox(height: 14),
+
                     // Quick date filters
                     Wrap(
-                      spacing: 8,
+                      spacing: 18,
                       runSpacing: 8,
                       children: [
                         Button(
@@ -260,19 +260,28 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           onPressed: _setThisYear,
                           child: const Text('This Year'),
                         ),
-                        Button(
-                          onPressed: _clearDateFilter,
-                          child: const Text('Clear Filter'),
-                        ),
                       ],
+                    ),
+
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 22),
+                    Button(
+                      onPressed: _clearDateFilter,
+                      style: ButtonStyle(
+                        foregroundColor: WidgetStateProperty.all(
+                          Colors.red.lighter,
+                        ),
+                      ),
+                      child: Text('Clear Filter'),
                     ),
                   ],
                 ),
               ),
             ),
-            
+
             const SizedBox(height: 24),
-            
+
             // Report Results
             Expanded(
               child: FutureBuilder<Map<String, double>>(
@@ -293,7 +302,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                   }
 
                   final report = snapshot.data ?? {};
-                  
+
                   if (report.isEmpty) {
                     return const Center(
                       child: Column(
@@ -307,7 +316,10 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                     );
                   }
 
-                  final total = report.values.fold<double>(0, (sum, val) => sum + val);
+                  final total = report.values.fold<double>(
+                    0,
+                    (sum, val) => sum + val,
+                  );
 
                   return Card(
                     child: Column(
@@ -320,7 +332,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             children: [
                               Text(
                                 'Report Results',
-                                style: FluentTheme.of(context).typography.subtitle,
+                                style: FluentTheme.of(
+                                  context,
+                                ).typography.subtitle,
                               ),
                               Container(
                                 padding: const EdgeInsets.symmetric(
@@ -328,15 +342,20 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                   vertical: 8,
                                 ),
                                 decoration: BoxDecoration(
-                                  color: Colors.blue.light.withOpacity(0.2),
+                                  color: Colors.blue.light.withValues(
+                                    alpha: 0.2,
+                                  ),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Text(
                                   'Total: ${currencyFormat.format(total)}',
-                                  style: FluentTheme.of(context).typography.bodyLarge?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    color: Colors.blue,
-                                  ),
+                                  style: FluentTheme.of(context)
+                                      .typography
+                                      .bodyLarge
+                                      ?.copyWith(
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.blue,
+                                      ),
                                 ),
                               ),
                             ],
@@ -350,34 +369,38 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                             itemBuilder: (context, index) {
                               final entry = report.entries.elementAt(index);
                               final percentage = (entry.value / total * 100);
-                              
+
                               return Container(
                                 margin: const EdgeInsets.only(bottom: 12),
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  border: Border.all(
-                                    color: Colors.grey,
-                                  ),
+                                  border: Border.all(color: Colors.grey),
                                   borderRadius: BorderRadius.circular(4),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Row(
-                                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
                                       children: [
                                         Expanded(
                                           child: Text(
                                             entry.key,
-                                            style: FluentTheme.of(context).typography.bodyStrong,
+                                            style: FluentTheme.of(
+                                              context,
+                                            ).typography.bodyStrong,
                                           ),
                                         ),
                                         Text(
                                           currencyFormat.format(entry.value),
-                                          style: FluentTheme.of(context).typography.bodyLarge?.copyWith(
-                                            fontWeight: FontWeight.bold,
-                                            color: Colors.green,
-                                          ),
+                                          style: FluentTheme.of(context)
+                                              .typography
+                                              .bodyLarge
+                                              ?.copyWith(
+                                                fontWeight: FontWeight.bold,
+                                                color: Colors.green,
+                                              ),
                                         ),
                                       ],
                                     ),
@@ -385,14 +408,14 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                                     Row(
                                       children: [
                                         Expanded(
-                                          child: ProgressBar(
-                                            value: percentage,
-                                          ),
+                                          child: ProgressBar(value: percentage),
                                         ),
                                         const SizedBox(width: 12),
                                         Text(
                                           '${percentage.toStringAsFixed(1)}%',
-                                          style: FluentTheme.of(context).typography.caption,
+                                          style: FluentTheme.of(
+                                            context,
+                                          ).typography.caption,
                                         ),
                                       ],
                                     ),

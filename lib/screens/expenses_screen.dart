@@ -1,14 +1,91 @@
 import 'package:fluent_ui/fluent_ui.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:drift/drift.dart' as drift;
+import 'package:flutter_riverpod/legacy.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/services.dart';
 import '../main.dart';
 import '../database/database.dart';
 
-final expensesProvider = StreamProvider<List<Expense>>((ref) {
+// Filter state providers
+final expensePageProvider = StateProvider<int>((ref) => 0);
+final expensePageSizeProvider = StateProvider<int>((ref) => 50);
+final expenseStartDateProvider = StateProvider<DateTime?>((ref) => null);
+final expenseEndDateProvider = StateProvider<DateTime?>((ref) => null);
+final expenseVendorFilterProvider = StateProvider<int?>((ref) => null);
+
+// Paginated and filtered expenses provider
+final paginatedExpensesProvider = StreamProvider<List<Expense>>((ref) {
   final db = ref.watch(databaseProvider);
-  return db.select(db.expenses).watch();
+  final page = ref.watch(expensePageProvider);
+  final pageSize = ref.watch(expensePageSizeProvider);
+  final startDate = ref.watch(expenseStartDateProvider);
+  final endDate = ref.watch(expenseEndDateProvider);
+  final vendorFilter = ref.watch(expenseVendorFilterProvider);
+
+  var query = db.select(db.expenses);
+
+  // Apply date range filter
+  if (startDate != null && endDate != null) {
+    query = query..where((e) => e.date.isBetweenValues(startDate, endDate));
+  }
+
+  // Apply vendor filter
+  if (vendorFilter != null) {
+    query = query..where((e) => e.vendorId.equals(vendorFilter));
+  }
+
+  // Apply sorting and pagination
+  query = query
+    ..orderBy([(e) => drift.OrderingTerm.desc(e.date)])
+    ..limit(pageSize, offset: page * pageSize);
+
+  return query.watch();
+});
+
+// Total count provider for pagination
+final totalExpensesCountProvider = FutureProvider<int>((ref) async {
+  final db = ref.watch(databaseProvider);
+  final startDate = ref.watch(expenseStartDateProvider);
+  final endDate = ref.watch(expenseEndDateProvider);
+  final vendorFilter = ref.watch(expenseVendorFilterProvider);
+
+  var query = db.selectOnly(db.expenses)..addColumns([db.expenses.id.count()]);
+
+  // Apply same filters as main query
+  if (startDate != null && endDate != null) {
+    query = query..where(db.expenses.date.isBetweenValues(startDate, endDate));
+  }
+
+  if (vendorFilter != null) {
+    query = query..where(db.expenses.vendorId.equals(vendorFilter));
+  }
+
+  final result = await query.getSingle();
+  return result.read(db.expenses.id.count()) ?? 0;
+});
+
+// Total amount provider
+final totalExpensesAmountProvider = FutureProvider<double>((ref) async {
+  final db = ref.watch(databaseProvider);
+  final startDate = ref.watch(expenseStartDateProvider);
+  final endDate = ref.watch(expenseEndDateProvider);
+  final vendorFilter = ref.watch(expenseVendorFilterProvider);
+
+  var query = db.selectOnly(db.expenses)
+    ..addColumns([db.expenses.amount.sum()]);
+
+  // Apply same filters
+  if (startDate != null && endDate != null) {
+    query = query..where(db.expenses.date.isBetweenValues(startDate, endDate));
+  }
+
+  if (vendorFilter != null) {
+    query = query..where(db.expenses.vendorId.equals(vendorFilter));
+  }
+
+  final result = await query.getSingle();
+  return result.read(db.expenses.amount.sum()) ?? 0.0;
 });
 
 class ExpensesScreen extends ConsumerStatefulWidget {
@@ -48,7 +125,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.orange.light.withOpacity(0.1),
+                  color: Colors.orange.light.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: Colors.orange.light),
                 ),
@@ -120,15 +197,17 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
         ),
         actions: [
           Button(
+            child: const Text('Close'),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          ),
+          FilledButton(
             child: const Text('Edit'),
             onPressed: () {
               Navigator.pop(context);
               _showAddEditDialog(expense: expense);
             },
-          ),
-          FilledButton(
-            child: const Text('Close'),
-            onPressed: () => Navigator.pop(context),
           ),
         ],
       ),
@@ -237,7 +316,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
       context: context,
       builder: (context) => StatefulBuilder(
         builder: (context, setState) => ContentDialog(
-          constraints: BoxConstraints(minWidth: 200 ,maxWidth: MediaQuery.of(context).size.width * 0.4),
+          constraints: BoxConstraints(
+            minWidth: 200,
+            maxWidth: MediaQuery.of(context).size.width * 0.4,
+          ),
           title: Text(expense == null ? 'Add New Expense' : 'Edit Expense'),
           content: SingleChildScrollView(
             child: Column(
@@ -254,7 +336,10 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         .map(
                           (site) => ComboBoxItem(
                             value: site.id,
-                            child: Text(site.name,overflow: TextOverflow.ellipsis),
+                            child: Text(
+                              site.name,
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
                         )
                         .toList(),
@@ -313,12 +398,14 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                           value: selectedVendorId,
                           placeholder: const Text('Select vendor'),
                           isExpanded: true,
-                          
                           items: vendors
                               .map(
                                 (vendor) => ComboBoxItem(
                                   value: vendor.id,
-                                  child: Text(vendor.name,overflow: TextOverflow.ellipsis),
+                                  child: Text(
+                                    vendor.name,
+                                    overflow: TextOverflow.ellipsis,
+                                  ),
                                 ),
                               )
                               .toList(),
@@ -333,7 +420,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         label: 'Category',
                         child: ComboBox<int>(
                           value: selectedCategoryId,
-                          placeholder: const Text('Select'),
+                          placeholder: const Text('Select category'),
                           isExpanded: true,
                           items: categories
                               .map(
@@ -361,6 +448,7 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                         label: 'Payment Mode',
                         child: ComboBox<String>(
                           value: paymentMode,
+                          isExpanded: true,
                           items: const [
                             ComboBoxItem(value: 'Cash', child: Text('Cash')),
                             ComboBoxItem(
@@ -457,7 +545,6 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                     ),
                   );
                 } else {
-                  // For updates, use toCompanion() and update method
                   await db
                       .update(db.expenses)
                       .replace(
@@ -503,9 +590,54 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
     );
   }
 
+  void _clearFilters() {
+    ref.read(expenseStartDateProvider.notifier).state = null;
+    ref.read(expenseEndDateProvider.notifier).state = null;
+    ref.read(expenseVendorFilterProvider.notifier).state = null;
+    ref.read(expensePageProvider.notifier).state = 0;
+  }
+
+  void _setThisMonth() {
+    final now = DateTime.now();
+    ref.read(expenseStartDateProvider.notifier).state = DateTime(
+      now.year,
+      now.month,
+      1,
+    );
+    ref.read(expenseEndDateProvider.notifier).state = DateTime(
+      now.year,
+      now.month + 1,
+      0,
+    );
+    ref.read(expensePageProvider.notifier).state = 0;
+  }
+
+  void _setLastMonth() {
+    final now = DateTime.now();
+    ref.read(expenseStartDateProvider.notifier).state = DateTime(
+      now.year,
+      now.month - 1,
+      1,
+    );
+    ref.read(expenseEndDateProvider.notifier).state = DateTime(
+      now.year,
+      now.month,
+      0,
+    );
+    ref.read(expensePageProvider.notifier).state = 0;
+  }
+
   @override
   Widget build(BuildContext context) {
-    final expensesAsync = ref.watch(expensesProvider);
+    final expensesAsync = ref.watch(paginatedExpensesProvider);
+    final totalCountAsync = ref.watch(totalExpensesCountProvider);
+    final totalAmountAsync = ref.watch(totalExpensesAmountProvider);
+    final page = ref.watch(expensePageProvider);
+    final pageSize = ref.watch(expensePageSizeProvider);
+    final startDate = ref.watch(expenseStartDateProvider);
+    final endDate = ref.watch(expenseEndDateProvider);
+    final vendorFilter = ref.watch(expenseVendorFilterProvider);
+
     final currencyFormat = NumberFormat.currency(symbol: '₹', decimalDigits: 2);
     final dateFormat = DateFormat('dd MMM yyyy');
 
@@ -524,83 +656,333 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           onPressed: () => _showAddEditDialog(),
         ),
       ),
-      content: expensesAsync.when(
-        data: (expenses) {
-          if (expenses.isEmpty) {
-            return const Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(FluentIcons.money, size: 64),
-                  SizedBox(height: 16),
-                  Text('No expenses recorded'),
-                  SizedBox(height: 8),
-                  Text('Click "Add Expense" to record your first expense'),
-                ],
-              ),
-            );
-          }
-
-          // Sort by date descending
-          final sortedExpenses = List<Expense>.from(expenses)
-            ..sort((a, b) => b.date.compareTo(a.date));
-
-          return ListView.builder(
+      content: Column(
+        children: [
+          // Filters Section
+          Container(
             padding: const EdgeInsets.all(16),
-            itemCount: sortedExpenses.length,
-            itemBuilder: (context, index) {
-              final expense = sortedExpenses[index];
-              return Card(
-                margin: const EdgeInsets.only(bottom: 8),
-                child: ListTile(
-                  leading: Container(
-                    padding: const EdgeInsets.all(8),
-                    decoration: BoxDecoration(
-                      color: Colors.orange.light.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(8),
+            decoration: BoxDecoration(
+              color: FluentTheme.of(context).micaBackgroundColor,
+              border: Border(
+                bottom: BorderSide(
+                  color: FluentTheme.of(
+                    context,
+                  ).resources.dividerStrokeColorDefault,
+                ),
+              ),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  children: [
+                    const Icon(FluentIcons.filter, size: 16),
+                    const SizedBox(width: 8),
+                    Text(
+                      'Filters',
+                      style: FluentTheme.of(context).typography.bodyStrong,
                     ),
-                    child: Icon(FluentIcons.money, color: Colors.orange),
-                  ),
-                  title: Text(expense.description),
-                  subtitle: Text(
-                    '${dateFormat.format(expense.date)} • ${expense.paymentMode ?? "Cash"}',
-                  ),
-                  trailing: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        currencyFormat.format(expense.amount),
-                        style: FluentTheme.of(context).typography.bodyLarge
-                            ?.copyWith(
-                              fontWeight: FontWeight.bold,
-                              color: Colors.orange,
+                  ],
+                ),
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 18,
+                  runSpacing: 12,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  children: [
+                    // Date Range Filters
+                    SizedBox(
+                      width: 160,
+                      child: InfoLabel(
+                        label: 'Start Date',
+                        child: DatePicker(
+                          selected: startDate,
+                          onChanged: (date) {
+                            ref.read(expenseStartDateProvider.notifier).state =
+                                date;
+                            ref.read(expensePageProvider.notifier).state = 0;
+                          },
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      width: 160,
+                      child: InfoLabel(
+                        label: 'End Date',
+                        child: DatePicker(
+                          selected: endDate,
+                          onChanged: (date) {
+                            ref.read(expenseEndDateProvider.notifier).state =
+                                date;
+                            ref.read(expensePageProvider.notifier).state = 0;
+                          },
+                        ),
+                      ),
+                    ),
+
+                    SizedBox(width: 10),
+                    // Quick date buttons
+                    Button(
+                      onPressed: _setThisMonth,
+                      child: const Text('This Month'),
+                    ),
+
+                    Button(
+                      onPressed: _setLastMonth,
+                      child: const Text('Last Month'),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 18),
+                Wrap(
+                  spacing: 30,
+                  runSpacing: 14,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+
+                  children: [
+                    // Vendor Filter
+                    SizedBox(
+                      width: 200,
+                      child: FutureBuilder<List<Vendor>>(
+                        future: ref.read(databaseProvider).getAllVendors(),
+                        builder: (context, snapshot) {
+                          if (!snapshot.hasData) {
+                            return const SizedBox.shrink();
+                          }
+                          final vendors = snapshot.data!;
+                          return InfoLabel(
+                            label: 'Vendor',
+                            child: ComboBox<int?>(
+                              value: vendorFilter,
+                              placeholder: const Text('All Vendors'),
+                              isExpanded: true,
+                              items: [
+                                const ComboBoxItem(
+                                  value: null,
+                                  child: Text('All Vendors'),
+                                ),
+                                ...vendors.map(
+                                  (vendor) => ComboBoxItem(
+                                    value: vendor.id,
+                                    child: Text(
+                                      vendor.name,
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                              onChanged: (value) {
+                                ref
+                                        .read(
+                                          expenseVendorFilterProvider.notifier,
+                                        )
+                                        .state =
+                                    value;
+                                ref.read(expensePageProvider.notifier).state =
+                                    0;
+                              },
                             ),
+                          );
+                        },
                       ),
-                      const SizedBox(width: 16),
-                      IconButton(
-                        icon: const Icon(FluentIcons.edit),
-                        onPressed: () => _showAddEditDialog(expense: expense),
+                    ),
+
+                    Button(
+                      onPressed: _clearFilters,
+                      style: ButtonStyle(
+                        //backgroundColor: WidgetStateProperty.all(Colors.red.light),
+                        foregroundColor: WidgetStateProperty.all(
+                          Colors.red.lighter,
+                        ),
                       ),
-                      IconButton(
-                        icon: const Icon(FluentIcons.delete),
-                        onPressed: () => _showDeleteConfirmation(expense),
+                      child: const Text('Clear All'),
+                    ),
+                  ],
+                ),
+
+                // Summary
+                if (totalCountAsync.hasValue && totalAmountAsync.hasValue) ...[
+                  const SizedBox(height: 18),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 8,
+                    ),
+                    decoration: BoxDecoration(
+                      borderRadius: BorderRadius.circular(4),
+                      border: Border.all(color: Colors.grey),
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(FluentIcons.info, size: 14),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Showing ${totalCountAsync.value} expenses • Total: ${currencyFormat.format(totalAmountAsync.value)}',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+
+          // Expenses List
+          Expanded(
+            child: expensesAsync.when(
+              data: (expenses) {
+                if (expenses.isEmpty) {
+                  return const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(FluentIcons.money, size: 64),
+                        SizedBox(height: 16),
+                        Text('No expenses found'),
+                        SizedBox(height: 8),
+                        Text('Try adjusting your filters or add a new expense'),
+                      ],
+                    ),
+                  );
+                }
+
+                return ListView.builder(
+                  padding: const EdgeInsets.all(16),
+                  itemCount: expenses.length,
+                  itemBuilder: (context, index) {
+                    final expense = expenses[index];
+                    return Card(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      child: ListTile(
+                        leading: Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: Colors.orange.light.withValues(alpha: 0.2),
+                            borderRadius: BorderRadius.circular(8),
+                          ),
+                          child: Icon(FluentIcons.money, color: Colors.orange),
+                        ),
+                        title: Text(expense.description),
+                        subtitle: Text(
+                          '${dateFormat.format(expense.date)} • ${expense.paymentMode ?? "Cash"}',
+                        ),
+                        trailing: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              currencyFormat.format(expense.amount),
+                              style: FluentTheme.of(context)
+                                  .typography
+                                  .bodyLarge
+                                  ?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    color: Colors.orange,
+                                  ),
+                            ),
+                            const SizedBox(width: 16),
+                            IconButton(
+                              icon: const Icon(FluentIcons.edit),
+                              onPressed: () =>
+                                  _showAddEditDialog(expense: expense),
+                            ),
+                            IconButton(
+                              icon: const Icon(FluentIcons.delete),
+                              onPressed: () => _showDeleteConfirmation(expense),
+                            ),
+                          ],
+                        ),
+                        onPressed: () => _showExpenseDetails(expense),
+                      ),
+                    );
+                  },
+                );
+              },
+              loading: () => const Center(child: ProgressRing()),
+              error: (error, stack) => Center(
+                child: InfoBar(
+                  title: const Text('Error loading expenses'),
+                  content: Text(error.toString()),
+                  severity: InfoBarSeverity.error,
+                ),
+              ),
+            ),
+          ),
+
+          // Pagination Controls
+          if (totalCountAsync.hasValue && totalCountAsync.value! > 0)
+            Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                border: Border(
+                  top: BorderSide(
+                    color: FluentTheme.of(
+                      context,
+                    ).resources.dividerStrokeColorDefault,
+                  ),
+                ),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  // Page size selector
+                  Row(
+                    children: [
+                      const Text('Show: '),
+                      const SizedBox(width: 8),
+                      ComboBox<int>(
+                        value: pageSize,
+                        items: const [
+                          ComboBoxItem(value: 25, child: Text('25')),
+                          ComboBoxItem(value: 50, child: Text('50')),
+                          ComboBoxItem(value: 100, child: Text('100')),
+                        ],
+                        onChanged: (value) {
+                          if (value != null) {
+                            ref.read(expensePageSizeProvider.notifier).state =
+                                value;
+                            ref.read(expensePageProvider.notifier).state = 0;
+                          }
+                        },
+                      ),
+                      const SizedBox(width: 8),
+                      const Text('per page'),
+                    ],
+                  ),
+                  // Pagination buttons
+                  Row(
+                    children: [
+                      Button(
+                        onPressed: page > 0
+                            ? () =>
+                                  ref.read(expensePageProvider.notifier).state--
+                            : null,
+                        child: const Icon(FluentIcons.chevron_left, size: 14),
+                      ),
+                      const SizedBox(width: 12),
+                      Text(
+                        'Page ${page + 1} of ${((totalCountAsync.value! - 1) / pageSize).ceil() + 1}',
+                      ),
+                      const SizedBox(width: 12),
+                      Button(
+                        onPressed:
+                            (page + 1) * pageSize < totalCountAsync.value!
+                            ? () =>
+                                  ref.read(expensePageProvider.notifier).state++
+                            : null,
+                        child: const Icon(FluentIcons.chevron_right, size: 14),
                       ),
                     ],
                   ),
-                  onPressed: () => _showExpenseDetails(expense),
-                ),
-              );
-            },
-          );
-        },
-        loading: () => const Center(child: ProgressRing()),
-        error: (error, stack) => Center(
-          child: InfoBar(
-            title: const Text('Error loading expenses'),
-            content: Text(error.toString()),
-            severity: InfoBarSeverity.error,
-          ),
-        ),
+                ],
+              ),
+            ),
+        ],
       ),
     );
   }

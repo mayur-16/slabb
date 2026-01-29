@@ -68,21 +68,6 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
     requiredDuringInsert: false,
     defaultValue: currentDateAndTime,
   );
-  static const VerificationMeta _isActiveMeta = const VerificationMeta(
-    'isActive',
-  );
-  @override
-  late final GeneratedColumn<bool> isActive = GeneratedColumn<bool>(
-    'is_active',
-    aliasedName,
-    false,
-    type: DriftSqlType.bool,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'CHECK ("is_active" IN (0, 1))',
-    ),
-    defaultValue: const Constant(true),
-  );
   @override
   List<GeneratedColumn> get $columns => [
     id,
@@ -90,7 +75,6 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
     location,
     description,
     createdAt,
-    isActive,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -136,12 +120,6 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
         createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
       );
     }
-    if (data.containsKey('is_active')) {
-      context.handle(
-        _isActiveMeta,
-        isActive.isAcceptableOrUnknown(data['is_active']!, _isActiveMeta),
-      );
-    }
     return context;
   }
 
@@ -171,10 +149,6 @@ class $SitesTable extends Sites with TableInfo<$SitesTable, Site> {
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
       )!,
-      isActive: attachedDatabase.typeMapping.read(
-        DriftSqlType.bool,
-        data['${effectivePrefix}is_active'],
-      )!,
     );
   }
 
@@ -190,14 +164,12 @@ class Site extends DataClass implements Insertable<Site> {
   final String? location;
   final String? description;
   final DateTime createdAt;
-  final bool isActive;
   const Site({
     required this.id,
     required this.name,
     this.location,
     this.description,
     required this.createdAt,
-    required this.isActive,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -211,7 +183,6 @@ class Site extends DataClass implements Insertable<Site> {
       map['description'] = Variable<String>(description);
     }
     map['created_at'] = Variable<DateTime>(createdAt);
-    map['is_active'] = Variable<bool>(isActive);
     return map;
   }
 
@@ -226,7 +197,6 @@ class Site extends DataClass implements Insertable<Site> {
           ? const Value.absent()
           : Value(description),
       createdAt: Value(createdAt),
-      isActive: Value(isActive),
     );
   }
 
@@ -241,7 +211,6 @@ class Site extends DataClass implements Insertable<Site> {
       location: serializer.fromJson<String?>(json['location']),
       description: serializer.fromJson<String?>(json['description']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
-      isActive: serializer.fromJson<bool>(json['isActive']),
     );
   }
   @override
@@ -253,7 +222,6 @@ class Site extends DataClass implements Insertable<Site> {
       'location': serializer.toJson<String?>(location),
       'description': serializer.toJson<String?>(description),
       'createdAt': serializer.toJson<DateTime>(createdAt),
-      'isActive': serializer.toJson<bool>(isActive),
     };
   }
 
@@ -263,14 +231,12 @@ class Site extends DataClass implements Insertable<Site> {
     Value<String?> location = const Value.absent(),
     Value<String?> description = const Value.absent(),
     DateTime? createdAt,
-    bool? isActive,
   }) => Site(
     id: id ?? this.id,
     name: name ?? this.name,
     location: location.present ? location.value : this.location,
     description: description.present ? description.value : this.description,
     createdAt: createdAt ?? this.createdAt,
-    isActive: isActive ?? this.isActive,
   );
   Site copyWithCompanion(SitesCompanion data) {
     return Site(
@@ -281,7 +247,6 @@ class Site extends DataClass implements Insertable<Site> {
           ? data.description.value
           : this.description,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
-      isActive: data.isActive.present ? data.isActive.value : this.isActive,
     );
   }
 
@@ -292,15 +257,13 @@ class Site extends DataClass implements Insertable<Site> {
           ..write('name: $name, ')
           ..write('location: $location, ')
           ..write('description: $description, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('isActive: $isActive')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, name, location, description, createdAt, isActive);
+  int get hashCode => Object.hash(id, name, location, description, createdAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -309,8 +272,7 @@ class Site extends DataClass implements Insertable<Site> {
           other.name == this.name &&
           other.location == this.location &&
           other.description == this.description &&
-          other.createdAt == this.createdAt &&
-          other.isActive == this.isActive);
+          other.createdAt == this.createdAt);
 }
 
 class SitesCompanion extends UpdateCompanion<Site> {
@@ -319,14 +281,12 @@ class SitesCompanion extends UpdateCompanion<Site> {
   final Value<String?> location;
   final Value<String?> description;
   final Value<DateTime> createdAt;
-  final Value<bool> isActive;
   const SitesCompanion({
     this.id = const Value.absent(),
     this.name = const Value.absent(),
     this.location = const Value.absent(),
     this.description = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.isActive = const Value.absent(),
   });
   SitesCompanion.insert({
     this.id = const Value.absent(),
@@ -334,7 +294,6 @@ class SitesCompanion extends UpdateCompanion<Site> {
     this.location = const Value.absent(),
     this.description = const Value.absent(),
     this.createdAt = const Value.absent(),
-    this.isActive = const Value.absent(),
   }) : name = Value(name);
   static Insertable<Site> custom({
     Expression<int>? id,
@@ -342,7 +301,6 @@ class SitesCompanion extends UpdateCompanion<Site> {
     Expression<String>? location,
     Expression<String>? description,
     Expression<DateTime>? createdAt,
-    Expression<bool>? isActive,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -350,7 +308,6 @@ class SitesCompanion extends UpdateCompanion<Site> {
       if (location != null) 'location': location,
       if (description != null) 'description': description,
       if (createdAt != null) 'created_at': createdAt,
-      if (isActive != null) 'is_active': isActive,
     });
   }
 
@@ -360,7 +317,6 @@ class SitesCompanion extends UpdateCompanion<Site> {
     Value<String?>? location,
     Value<String?>? description,
     Value<DateTime>? createdAt,
-    Value<bool>? isActive,
   }) {
     return SitesCompanion(
       id: id ?? this.id,
@@ -368,7 +324,6 @@ class SitesCompanion extends UpdateCompanion<Site> {
       location: location ?? this.location,
       description: description ?? this.description,
       createdAt: createdAt ?? this.createdAt,
-      isActive: isActive ?? this.isActive,
     );
   }
 
@@ -390,9 +345,6 @@ class SitesCompanion extends UpdateCompanion<Site> {
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
-    if (isActive.present) {
-      map['is_active'] = Variable<bool>(isActive.value);
-    }
     return map;
   }
 
@@ -403,8 +355,7 @@ class SitesCompanion extends UpdateCompanion<Site> {
           ..write('name: $name, ')
           ..write('location: $location, ')
           ..write('description: $description, ')
-          ..write('createdAt: $createdAt, ')
-          ..write('isActive: $isActive')
+          ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
   }
@@ -1817,7 +1768,6 @@ typedef $$SitesTableCreateCompanionBuilder =
       Value<String?> location,
       Value<String?> description,
       Value<DateTime> createdAt,
-      Value<bool> isActive,
     });
 typedef $$SitesTableUpdateCompanionBuilder =
     SitesCompanion Function({
@@ -1826,7 +1776,6 @@ typedef $$SitesTableUpdateCompanionBuilder =
       Value<String?> location,
       Value<String?> description,
       Value<DateTime> createdAt,
-      Value<bool> isActive,
     });
 
 final class $$SitesTableReferences
@@ -1883,11 +1832,6 @@ class $$SitesTableFilterComposer extends Composer<_$AppDatabase, $SitesTable> {
 
   ColumnFilters<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
-    builder: (column) => ColumnFilters(column),
-  );
-
-  ColumnFilters<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -1950,11 +1894,6 @@ class $$SitesTableOrderingComposer
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
   );
-
-  ColumnOrderings<bool> get isActive => $composableBuilder(
-    column: $table.isActive,
-    builder: (column) => ColumnOrderings(column),
-  );
 }
 
 class $$SitesTableAnnotationComposer
@@ -1982,9 +1921,6 @@ class $$SitesTableAnnotationComposer
 
   GeneratedColumn<DateTime> get createdAt =>
       $composableBuilder(column: $table.createdAt, builder: (column) => column);
-
-  GeneratedColumn<bool> get isActive =>
-      $composableBuilder(column: $table.isActive, builder: (column) => column);
 
   Expression<T> expensesRefs<T extends Object>(
     Expression<T> Function($$ExpensesTableAnnotationComposer a) f,
@@ -2045,14 +1981,12 @@ class $$SitesTableTableManager
                 Value<String?> location = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
               }) => SitesCompanion(
                 id: id,
                 name: name,
                 location: location,
                 description: description,
                 createdAt: createdAt,
-                isActive: isActive,
               ),
           createCompanionCallback:
               ({
@@ -2061,14 +1995,12 @@ class $$SitesTableTableManager
                 Value<String?> location = const Value.absent(),
                 Value<String?> description = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
-                Value<bool> isActive = const Value.absent(),
               }) => SitesCompanion.insert(
                 id: id,
                 name: name,
                 location: location,
                 description: description,
                 createdAt: createdAt,
-                isActive: isActive,
               ),
           withReferenceMapper: (p0) => p0
               .map(
