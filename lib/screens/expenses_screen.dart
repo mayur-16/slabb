@@ -656,204 +656,212 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
           onPressed: () => _showAddEditDialog(),
         ),
       ),
-      content: Column(
-        children: [
+      content: CustomScrollView(
+        slivers: [
           // Filters Section
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: FluentTheme.of(context).micaBackgroundColor,
-              border: Border(
-                bottom: BorderSide(
-                  color: FluentTheme.of(
-                    context,
-                  ).resources.dividerStrokeColorDefault,
+          SliverToBoxAdapter(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: FluentTheme.of(context).micaBackgroundColor,
+                border: Border(
+                  bottom: BorderSide(
+                    color: FluentTheme.of(
+                      context,
+                    ).resources.dividerStrokeColorDefault,
+                  ),
                 ),
               ),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Icon(FluentIcons.filter, size: 16),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Filters',
-                      style: FluentTheme.of(context).typography.bodyStrong,
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 18,
-                  runSpacing: 12,
-                  crossAxisAlignment: WrapCrossAlignment.end,
-                  children: [
-                    // Date Range Filters
-                    SizedBox(
-                      width: 160,
-                      child: InfoLabel(
-                        label: 'Start Date',
-                        child: DatePicker(
-                          selected: startDate,
-                          onChanged: (date) {
-                            ref.read(expenseStartDateProvider.notifier).state =
-                                date;
-                            ref.read(expensePageProvider.notifier).state = 0;
-                          },
-                        ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      const Icon(FluentIcons.filter, size: 16),
+                      const SizedBox(width: 8),
+                      Text(
+                        'Filters',
+                        style: FluentTheme.of(context).typography.bodyStrong,
                       ),
-                    ),
-                    SizedBox(
-                      width: 160,
-                      child: InfoLabel(
-                        label: 'End Date',
-                        child: DatePicker(
-                          selected: endDate,
-                          onChanged: (date) {
-                            ref.read(expenseEndDateProvider.notifier).state =
-                                date;
-                            ref.read(expensePageProvider.notifier).state = 0;
-                          },
-                        ),
-                      ),
-                    ),
-
-                    SizedBox(width: 10),
-                    // Quick date buttons
-                    Button(
-                      onPressed: _setThisMonth,
-                      child: const Text('This Month'),
-                    ),
-
-                    Button(
-                      onPressed: _setLastMonth,
-                      child: const Text('Last Month'),
-                    ),
-                  ],
-                ),
-
-                const SizedBox(height: 18),
-                Wrap(
-                  spacing: 30,
-                  runSpacing: 14,
-                  crossAxisAlignment: WrapCrossAlignment.end,
-
-                  children: [
-                    // Vendor Filter
-                    SizedBox(
-                      width: 200,
-                      child: FutureBuilder<List<Vendor>>(
-                        future: ref.read(databaseProvider).getAllVendors(),
-                        builder: (context, snapshot) {
-                          if (!snapshot.hasData) {
-                            return const SizedBox.shrink();
-                          }
-                          final vendors = snapshot.data!;
-                          return InfoLabel(
-                            label: 'Vendor',
-                            child: ComboBox<int?>(
-                              value: vendorFilter,
-                              placeholder: const Text('All Vendors'),
-                              isExpanded: true,
-                              items: [
-                                const ComboBoxItem(
-                                  value: null,
-                                  child: Text('All Vendors'),
-                                ),
-                                ...vendors.map(
-                                  (vendor) => ComboBoxItem(
-                                    value: vendor.id,
-                                    child: Text(
-                                      vendor.name,
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                              onChanged: (value) {
-                                ref
-                                        .read(
-                                          expenseVendorFilterProvider.notifier,
-                                        )
-                                        .state =
-                                    value;
-                                ref.read(expensePageProvider.notifier).state =
-                                    0;
-                              },
-                            ),
-                          );
-                        },
-                      ),
-                    ),
-
-                    Button(
-                      onPressed: _clearFilters,
-                      style: ButtonStyle(
-                        //backgroundColor: WidgetStateProperty.all(Colors.red.light),
-                        foregroundColor: WidgetStateProperty.all(
-                          Colors.red.lighter,
-                        ),
-                      ),
-                      child: const Text('Clear All'),
-                    ),
-                  ],
-                ),
-
-                // Summary
-                if (totalCountAsync.hasValue && totalAmountAsync.hasValue) ...[
+                    ],
+                  ),
                   const SizedBox(height: 18),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(4),
-                      border: Border.all(color: Colors.grey),
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const Icon(FluentIcons.info, size: 14),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Showing ${totalCountAsync.value} expenses • Total: ${currencyFormat.format(totalAmountAsync.value)}',
-                          style: const TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w500,
+                  Wrap(
+                    spacing: 18,
+                    runSpacing: 12,
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                    children: [
+                      // Date Range Filters
+                      SizedBox(
+                        width: 160,
+                        child: InfoLabel(
+                          label: 'Start Date',
+                          child: DatePicker(
+                            selected: startDate,
+                            onChanged: (date) {
+                              ref.read(expenseStartDateProvider.notifier).state =
+                                  date;
+                              ref.read(expensePageProvider.notifier).state = 0;
+                            },
                           ),
                         ),
-                      ],
-                    ),
+                      ),
+                      SizedBox(
+                        width: 160,
+                        child: InfoLabel(
+                          label: 'End Date',
+                          child: DatePicker(
+                            selected: endDate,
+                            onChanged: (date) {
+                              ref.read(expenseEndDateProvider.notifier).state =
+                                  date;
+                              ref.read(expensePageProvider.notifier).state = 0;
+                            },
+                          ),
+                        ),
+                      ),
+                  
+                      SizedBox(width: 10),
+                      // Quick date buttons
+                      Button(
+                        onPressed: _setThisMonth,
+                        child: const Text('This Month'),
+                      ),
+                  
+                      Button(
+                        onPressed: _setLastMonth,
+                        child: const Text('Last Month'),
+                      ),
+                    ],
                   ),
+                  
+                  const SizedBox(height: 18),
+                  Wrap(
+                    spacing: 30,
+                    runSpacing: 14,
+                    crossAxisAlignment: WrapCrossAlignment.end,
+                  
+                    children: [
+                      // Vendor Filter
+                      SizedBox(
+                        width: 200,
+                        child: FutureBuilder<List<Vendor>>(
+                          future: ref.read(databaseProvider).getAllVendors(),
+                          builder: (context, snapshot) {
+                            if (!snapshot.hasData) {
+                              return const SizedBox.shrink();
+                            }
+                            final vendors = snapshot.data!;
+                            return InfoLabel(
+                              label: 'Vendor',
+                              child: ComboBox<int?>(
+                                value: vendorFilter,
+                                placeholder: const Text('All Vendors'),
+                                isExpanded: true,
+                                items: [
+                                  const ComboBoxItem(
+                                    value: null,
+                                    child: Text('All Vendors'),
+                                  ),
+                                  ...vendors.map(
+                                    (vendor) => ComboBoxItem(
+                                      value: vendor.id,
+                                      child: Text(
+                                        vendor.name,
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                                onChanged: (value) {
+                                  ref
+                                          .read(
+                                            expenseVendorFilterProvider.notifier,
+                                          )
+                                          .state =
+                                      value;
+                                  ref.read(expensePageProvider.notifier).state =
+                                      0;
+                                },
+                              ),
+                            );
+                          },
+                        ),
+                      ),
+                  
+                      Button(
+                        onPressed: _clearFilters,
+                        style: ButtonStyle(
+                          //backgroundColor: WidgetStateProperty.all(Colors.red.light),
+                          foregroundColor: WidgetStateProperty.all(
+                            Colors.red.lighter,
+                          ),
+                        ),
+                        child: const Text('Clear All'),
+                      ),
+                    ],
+                  ),
+                  
+                  // Summary
+                  if (totalCountAsync.hasValue && totalAmountAsync.hasValue) ...[
+                    const SizedBox(height: 18),
+                    Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 12,
+                        vertical: 8,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: Colors.grey),
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          const Icon(FluentIcons.info, size: 14),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Showing ${totalCountAsync.value} expenses • Total: ${currencyFormat.format(totalAmountAsync.value)}',
+                            style: const TextStyle(
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
                 ],
-              ],
+              ),
             ),
           ),
-
+      
           // Expenses List
-          Expanded(
-            child: expensesAsync.when(
-              data: (expenses) {
-                if (expenses.isEmpty) {
-                  return const Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(FluentIcons.money, size: 64),
-                        SizedBox(height: 16),
-                        Text('No expenses found'),
-                        SizedBox(height: 8),
-                        Text('Try adjusting your filters or add a new expense'),
-                      ],
+          expensesAsync.when(
+            data: (expenses) {
+              if (expenses.isEmpty) {
+                return SliverToBoxAdapter(
+                  child: SizedBox(
+                    height: 300,
+                    child: const Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(FluentIcons.money, size: 64),
+                          SizedBox(height: 16),
+                          Text('No expenses found'),
+                          SizedBox(height: 8),
+                          Text('Try adjusting your filters or add a new expense'),
+                        ],
+                      ),
                     ),
-                  );
-                }
-
-                return ListView.builder(
-                  padding: const EdgeInsets.all(16),
+                  ),
+                );
+              }
+          
+              return SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                sliver: SliverList.builder(
+                  
                   itemCount: expenses.length,
                   itemBuilder: (context, index) {
                     final expense = expenses[index];
@@ -901,85 +909,96 @@ class _ExpensesScreenState extends ConsumerState<ExpensesScreen> {
                       ),
                     );
                   },
-                );
-              },
-              loading: () => const Center(child: ProgressRing()),
-              error: (error, stack) => Center(
-                child: InfoBar(
-                  title: const Text('Error loading expenses'),
-                  content: Text(error.toString()),
-                  severity: InfoBarSeverity.error,
+                ),
+              );
+            },
+            loading: () => SliverToBoxAdapter(
+              child: SizedBox(
+                  height: 300,
+                child: const Center(child: ProgressRing())),
+            ),
+            error: (error, stack) => SliverToBoxAdapter(
+              child: SizedBox(
+                height: 300,
+                child: Center(
+                  child: InfoBar(
+                    title: const Text('Error loading expenses'),
+                    content: Text(error.toString()),
+                    severity: InfoBarSeverity.error,
+                  ),
                 ),
               ),
             ),
           ),
-
+      
           // Pagination Controls
           if (totalCountAsync.hasValue && totalCountAsync.value! > 0)
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                border: Border(
-                  top: BorderSide(
-                    color: FluentTheme.of(
-                      context,
-                    ).resources.dividerStrokeColorDefault,
+            SliverToBoxAdapter(
+              child: Container(
+                padding: const EdgeInsets.all(16),
+                decoration: BoxDecoration(
+                  border: Border(
+                    top: BorderSide(
+                      color: FluentTheme.of(
+                        context,
+                      ).resources.dividerStrokeColorDefault,
+                    ),
                   ),
                 ),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  // Page size selector
-                  Row(
-                    children: [
-                      const Text('Show: '),
-                      const SizedBox(width: 8),
-                      ComboBox<int>(
-                        value: pageSize,
-                        items: const [
-                          ComboBoxItem(value: 25, child: Text('25')),
-                          ComboBoxItem(value: 50, child: Text('50')),
-                          ComboBoxItem(value: 100, child: Text('100')),
-                        ],
-                        onChanged: (value) {
-                          if (value != null) {
-                            ref.read(expensePageSizeProvider.notifier).state =
-                                value;
-                            ref.read(expensePageProvider.notifier).state = 0;
-                          }
-                        },
-                      ),
-                      const SizedBox(width: 8),
-                      const Text('per page'),
-                    ],
-                  ),
-                  // Pagination buttons
-                  Row(
-                    children: [
-                      Button(
-                        onPressed: page > 0
-                            ? () =>
-                                  ref.read(expensePageProvider.notifier).state--
-                            : null,
-                        child: const Icon(FluentIcons.chevron_left, size: 14),
-                      ),
-                      const SizedBox(width: 12),
-                      Text(
-                        'Page ${page + 1} of ${((totalCountAsync.value! - 1) / pageSize).ceil() + 1}',
-                      ),
-                      const SizedBox(width: 12),
-                      Button(
-                        onPressed:
-                            (page + 1) * pageSize < totalCountAsync.value!
-                            ? () =>
-                                  ref.read(expensePageProvider.notifier).state++
-                            : null,
-                        child: const Icon(FluentIcons.chevron_right, size: 14),
-                      ),
-                    ],
-                  ),
-                ],
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    // Page size selector
+                    Row(
+                      children: [
+                        const Text('Show: '),
+                        const SizedBox(width: 8),
+                        ComboBox<int>(
+                          value: pageSize,
+                          items: const [
+                            ComboBoxItem(value: 25, child: Text('25')),
+                            ComboBoxItem(value: 50, child: Text('50')),
+                            ComboBoxItem(value: 100, child: Text('100')),
+                          ],
+                          onChanged: (value) {
+                            if (value != null) {
+                              ref.read(expensePageSizeProvider.notifier).state =
+                                  value;
+                              ref.read(expensePageProvider.notifier).state = 0;
+                            }
+                          },
+                        ),
+                        const SizedBox(width: 8),
+                        const Text('per page'),
+                      ],
+                    ),
+                    // Pagination buttons
+                    Row(
+                      children: [
+                        Button(
+                          onPressed: page > 0
+                              ? () =>
+                                    ref.read(expensePageProvider.notifier).state--
+                              : null,
+                          child: const Icon(FluentIcons.chevron_left, size: 14),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          'Page ${page + 1} of ${((totalCountAsync.value! - 1) / pageSize).ceil() + 1}',
+                        ),
+                        const SizedBox(width: 12),
+                        Button(
+                          onPressed:
+                              (page + 1) * pageSize < totalCountAsync.value!
+                              ? () =>
+                                    ref.read(expensePageProvider.notifier).state++
+                              : null,
+                          child: const Icon(FluentIcons.chevron_right, size: 14),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
         ],

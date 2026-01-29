@@ -149,7 +149,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
           onPressed: () => setState(() {}),
         ),
       ),
-      content: Padding(
+      content: SingleChildScrollView(
         padding: const EdgeInsets.all(24.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -166,7 +166,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                       style: FluentTheme.of(context).typography.subtitle,
                     ),
                     const SizedBox(height: 16),
-
+                
                     // Report Type Selection
                     Row(
                       children: [
@@ -207,18 +207,18 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ),
                       ],
                     ),
-
+                
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 16),
-
+                
                     // Date Range
                     Text(
                       'Date Range',
                       style: FluentTheme.of(context).typography.bodyStrong,
                     ),
                     const SizedBox(height: 12),
-
+                
                     Row(
                       children: [
                         InfoLabel(
@@ -240,9 +240,9 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ),
                       ],
                     ),
-
+                
                     const SizedBox(height: 14),
-
+                
                     // Quick date filters
                     Wrap(
                       spacing: 18,
@@ -262,7 +262,7 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                         ),
                       ],
                     ),
-
+                
                     const SizedBox(height: 16),
                     const Divider(),
                     const SizedBox(height: 22),
@@ -279,32 +279,38 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                 ),
               ),
             ),
-
+                
             const SizedBox(height: 24),
-
+                
             // Report Results
-            Expanded(
-              child: FutureBuilder<Map<String, double>>(
-                future: _generateReport(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: ProgressRing());
-                  }
-
-                  if (snapshot.hasError) {
-                    return Center(
+            FutureBuilder<Map<String, double>>(
+              future: _generateReport(),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return SizedBox(
+                    height: 300,
+                    child: const Center(child: ProgressRing()));
+                }
+              
+                if (snapshot.hasError) {
+                  return SizedBox(
+                    height: 300,
+                    child: Center(
                       child: InfoBar(
                         title: const Text('Error generating report'),
                         content: Text(snapshot.error.toString()),
                         severity: InfoBarSeverity.error,
                       ),
-                    );
-                  }
-
-                  final report = snapshot.data ?? {};
-
-                  if (report.isEmpty) {
-                    return const Center(
+                    ),
+                  );
+                }
+              
+                final report = snapshot.data ?? {};
+              
+                if (report.isEmpty) {
+                  return SizedBox(
+                    height: 300,
+                    child: const Center(
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -313,123 +319,123 @@ class _ReportsScreenState extends ConsumerState<ReportsScreen> {
                           Text('No data available for selected filters'),
                         ],
                       ),
-                    );
-                  }
-
-                  final total = report.values.fold<double>(
-                    0,
-                    (sum, val) => sum + val,
+                    ),
                   );
-
-                  return Card(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Padding(
-                          padding: const EdgeInsets.all(16.0),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Text(
-                                'Report Results',
-                                style: FluentTheme.of(
-                                  context,
-                                ).typography.subtitle,
+                }
+              
+                final total = report.values.fold<double>(
+                  0,
+                  (sum, val) => sum + val,
+                );
+              
+                return Card(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.all(16.0),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text(
+                              'Report Results',
+                              style: FluentTheme.of(
+                                context,
+                              ).typography.subtitle,
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
                               ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 16,
-                                  vertical: 8,
+                              decoration: BoxDecoration(
+                                color: Colors.blue.light.withValues(
+                                  alpha: 0.2,
                                 ),
-                                decoration: BoxDecoration(
-                                  color: Colors.blue.light.withValues(
-                                    alpha: 0.2,
-                                  ),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Text(
-                                  'Total: ${currencyFormat.format(total)}',
-                                  style: FluentTheme.of(context)
-                                      .typography
-                                      .bodyLarge
-                                      ?.copyWith(
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.blue,
-                                      ),
-                                ),
+                                borderRadius: BorderRadius.circular(4),
                               ),
-                            ],
-                          ),
-                        ),
-                        const Divider(),
-                        Expanded(
-                          child: ListView.builder(
-                            padding: const EdgeInsets.all(16),
-                            itemCount: report.length,
-                            itemBuilder: (context, index) {
-                              final entry = report.entries.elementAt(index);
-                              final percentage = (entry.value / total * 100);
-
-                              return Container(
-                                margin: const EdgeInsets.only(bottom: 12),
-                                padding: const EdgeInsets.all(12),
-                                decoration: BoxDecoration(
-                                  border: Border.all(color: Colors.grey),
-                                  borderRadius: BorderRadius.circular(4),
-                                ),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        Expanded(
-                                          child: Text(
-                                            entry.key,
-                                            style: FluentTheme.of(
-                                              context,
-                                            ).typography.bodyStrong,
-                                          ),
-                                        ),
-                                        Text(
-                                          currencyFormat.format(entry.value),
-                                          style: FluentTheme.of(context)
-                                              .typography
-                                              .bodyLarge
-                                              ?.copyWith(
-                                                fontWeight: FontWeight.bold,
-                                                color: Colors.green,
-                                              ),
-                                        ),
-                                      ],
+                              child: Text(
+                                'Total: ${currencyFormat.format(total)}',
+                                style: FluentTheme.of(context)
+                                    .typography
+                                    .bodyLarge
+                                    ?.copyWith(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.blue,
                                     ),
-                                    const SizedBox(height: 8),
-                                    Row(
-                                      children: [
-                                        Expanded(
-                                          child: ProgressBar(value: percentage),
-                                        ),
-                                        const SizedBox(width: 12),
-                                        Text(
-                                          '${percentage.toStringAsFixed(1)}%',
-                                          style: FluentTheme.of(
-                                            context,
-                                          ).typography.caption,
-                                        ),
-                                      ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Divider(),
+                      ListView.builder(
+                        shrinkWrap: true,  
+                        physics: const NeverScrollableScrollPhysics(),
+                        padding: const EdgeInsets.all(16),
+                        itemCount: report.length,
+                        itemBuilder: (context, index) {
+                          final entry = report.entries.elementAt(index);
+                          final percentage = (entry.value / total * 100);
+                                    
+                          return Container(
+                            margin: const EdgeInsets.only(bottom: 12),
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              border: Border.all(color: Colors.grey),
+                              borderRadius: BorderRadius.circular(4),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    Expanded(
+                                      child: Text(
+                                        entry.key,
+                                        style: FluentTheme.of(
+                                          context,
+                                        ).typography.bodyStrong,
+                                      ),
+                                    ),
+                                    Text(
+                                      currencyFormat.format(entry.value),
+                                      style: FluentTheme.of(context)
+                                          .typography
+                                          .bodyLarge
+                                          ?.copyWith(
+                                            fontWeight: FontWeight.bold,
+                                            color: Colors.green,
+                                          ),
                                     ),
                                   ],
                                 ),
-                              );
-                            },
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              ),
+                                const SizedBox(height: 8),
+                                Row(
+                                  children: [
+                                    Expanded(
+                                      child: ProgressBar(value: percentage),
+                                    ),
+                                    const SizedBox(width: 12),
+                                    Text(
+                                      '${percentage.toStringAsFixed(1)}%',
+                                      style: FluentTheme.of(
+                                        context,
+                                      ).typography.caption,
+                                    ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
             ),
           ],
         ),
