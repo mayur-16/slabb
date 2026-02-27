@@ -18,20 +18,16 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
   int _currentIndex = 0;
 
   final List<NavigationPaneItem> _items = [
-    PaneItem(
-      icon: const Icon(FluentIcons.view_dashboard),
-      title: const Text('Dashboard'),
-      body: const DashboardScreen(),
+  
+   PaneItem(
+      icon: const Icon(FluentIcons.money),
+      title: const Text('Expenses'),
+      body: const ExpensesScreen(),
     ),
     PaneItem(
       icon: const Icon(FluentIcons.real_estate),
       title: const Text('Sites'),
       body: const SitesScreen(),
-    ),
-    PaneItem(
-      icon: const Icon(FluentIcons.money),
-      title: const Text('Expenses'),
-      body: const ExpensesScreen(),
     ),
     PaneItem(
       icon: const Icon(FluentIcons.people),
@@ -42,6 +38,11 @@ class _HomeScreenState extends ConsumerState<HomeScreen> {
       icon: const Icon(FluentIcons.chart),
       title: const Text('Reports'),
       body: const ReportsScreen(),
+    ),
+      PaneItem(
+      icon: const Icon(FluentIcons.view_dashboard),
+      title: const Text('Dashboard'),
+      body: const DashboardScreen(),
     ),
   ];
 
